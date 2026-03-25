@@ -193,9 +193,7 @@ export function MenuClient({ initialCategories, initialProducts }: MenuClientPro
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}
-                product={product}
-                onAddToCart={handleAddToCart}
-                onCustomize={handleCustomize}
+                product={product as any}
               />
             ))}
           </div>

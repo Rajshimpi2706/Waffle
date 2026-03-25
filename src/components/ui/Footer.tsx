@@ -12,11 +12,11 @@ export function Footer() {
           <div className="md:col-span-1">
             <Link href="/" className="inline-block mb-4">
               <span className="font-serif text-3xl font-bold tracking-tight text-white">
-                Waffle<span className="text-[#C17839]">House</span>.
+                Waffle <span className="text-[#C17839]">Wala</span>
               </span>
             </Link>
             <p className="text-[#C4A882] text-sm leading-relaxed mb-6">
-              Serving the finest Belgian waffles with premium ingredients and a whole lot of love since 2018.
+              "Har Bite Mein Happiness" - Serving the finest Belgian waffles with premium ingredients and a whole lot of love.
             </p>
             <div className="flex items-center gap-4">
               <a href="#" className="p-2 rounded-full bg-white/10 hover:bg-[#C17839] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center">
@@ -65,14 +65,14 @@ export function Footer() {
             </address>
             <div className="text-[#C4A882] text-sm space-y-1">
               <p>Call: <a href="tel:+919876543210" className="hover:text-white transition-colors">+91 98765 43210</a></p>
-              <p>Email: <a href="mailto:hello@wafflehouse.in" className="hover:text-white transition-colors">hello@wafflehouse.in</a></p>
+              <p>Email: <a href="mailto:hello@wafflewala.in" className="hover:text-white transition-colors">hello@wafflewala.in</a></p>
             </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#C4A882]">
-          <p>&copy; {year} Waffle House. All rights reserved.</p>
+          <p>&copy; {year} Waffle Wala. All rights reserved.</p>
           <p>Handcrafted with ❤️ for waffle lovers.</p>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Button } from './Button';
 import { Badge } from './Badge';
 import { formatCurrency, truncate } from '@/lib/utils';
+import { useCartStore } from '@/lib/cart';
 import type { Product } from '@/types';
 
 // Placeholder blur data URL for loading state
@@ -19,90 +20,72 @@ interface ProductCardProps {
   onCustomize?: (product: Product) => void;
 }
 
-export function ProductCard({ product, onAddToCart, onCustomize }: ProductCardProps) {
+export function ProductCard({ product }: { product: Product }) {
   const [imgSrc, setImgSrc] = useState(product.image_url || fallbackImage);
+  const addItem = useCartStore((state) => state.addItem);
 
-  const hasCustomization = (product.variants && product.variants.length > 0) ||
-                           (product.toppings && product.toppings.length > 0);
-
-  const isSoldOut = product.is_sold_out || !product.is_available;
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    addItem({
+      productId: product.id,
+      productName: product.name,
+      productImage: product.image_url,
+      quantity: 1,
+      unitPrice: product.base_price,
+      toppings: [],
+    });
+    // Trigger cart drawer open via event
+    document.dispatchEvent(new CustomEvent('open-cart'));
+  };
 
   return (
-    <div className="card group relative flex flex-col overflow-hidden h-full">
-      {/* Badges Overlay */}
-      <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
-        {product.is_featured && <Badge variant="gold">Bestseller</Badge>}
-        {product.is_vegetarian ? (
-          <span className="bg-white/90 backdrop-blur p-1 rounded border border-green-600 shadow-sm" title="Vegetarian">
-            <span className="block w-2.5 h-2.5 rounded-full bg-green-600"></span>
-          </span>
-        ) : (
-           <span className="bg-white/90 backdrop-blur p-1 rounded border border-red-600 shadow-sm" title="Non-Vegetarian">
-            <span className="block w-0 h-0 border-l-[5px] border-r-[5px] border-b-[8px] border-l-transparent border-r-transparent border-b-red-600"></span>
-          </span>
-        )}
-      </div>
-
-      {/* Image Container */}
-      <Link href={`/menu/${product.slug}`} className="relative aspect-[4/3] w-full bg-[#F5E6CC] block overflow-hidden">
-        {isSoldOut && (
-          <div className="absolute inset-0 bg-black/40 z-20 flex items-center justify-center backdrop-blur-[2px]">
-            <Badge variant="destructive" className="text-sm px-4 py-1 uppercase tracking-wider">Sold Out</Badge>
-          </div>
-        )}
+    <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-[#F5E6CC] group hover:shadow-md transition-all duration-300 flex flex-col h-full">
+      {/* Image */}
+      <div className="relative aspect-square overflow-hidden bg-[#FDF6EC]">
         <Image
           src={imgSrc}
           alt={product.name}
           fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className={`object-cover transition-transform duration-500 ${!isSoldOut ? 'group-hover:scale-105' : 'opacity-70 grayscale'}`}
-          placeholder="blur"
-          blurDataURL={blurDataURL}
-          loading="lazy"
+          className="object-cover transition-transform duration-500 group-hover:scale-110"
           onError={() => setImgSrc(fallbackImage)}
         />
-      </Link>
+        {product.is_featured && (
+          <div className="absolute top-4 left-4">
+            <Badge variant="gold" className="px-3 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full shadow-sm">
+              Bestseller
+            </Badge>
+          </div>
+        )}
+      </div>
 
       {/* Content */}
-      <div className="flex flex-col flex-grow p-5 self-stretch">
-        <Link href={`/menu/${product.slug}`} className="block">
-          <h3 className="font-serif text-lg font-semibold text-[#3B1F0A] mb-1 line-clamp-1 hover:text-[#C17839] transition-colors">
+      <div className="p-6 flex flex-col flex-1">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="font-serif text-xl font-bold text-[#3B1F0A] group-hover:text-[#C17839] transition-colors line-clamp-1">
             {product.name}
           </h3>
-        </Link>
-        <p className="text-sm text-[#8B5E3C] mb-4 line-clamp-2">
-          {product.description || 'Delicious, made-to-order belgian waffle.'}
+          <span className="bg-green-50 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded border border-green-100 flex items-center gap-1 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+            VEG
+          </span>
+        </div>
+        
+        <p className="text-sm text-[#8B5E3C] mb-6 line-clamp-2 leading-relaxed">
+          {product.description}
         </p>
 
-        <div className="mt-auto flex items-end justify-between">
+        <div className="mt-auto flex items-center justify-between gap-4">
           <div className="flex flex-col">
-            <span className="text-sm text-[#A8662D] font-medium leading-tight">Starting from</span>
-            <span className="text-xl font-bold text-[#3B1F0A]">
-              {formatCurrency(product.base_price)}
-            </span>
+            <span className="text-[10px] uppercase tracking-wider text-[#A17C5F] font-bold">Price</span>
+            <span className="text-xl font-bold text-[#3B1F0A]">₹{product.base_price}</span>
           </div>
-
-          {!isSoldOut && (
-            hasCustomization ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onCustomize?.(product)}
-                className="rounded-full px-5 uppercase text-xs tracking-wide"
-              >
-                Add +
-              </Button>
-            ) : (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => onAddToCart?.(product)}
-                className="rounded-full px-5 uppercase text-xs tracking-wide"
-              >
-                Add
-              </Button>
-            )
-          )}
+          
+          <Button 
+            onClick={handleAddToCart}
+            className="rounded-full bg-[#3B1F0A] hover:bg-[#C17839] text-white px-6 py-2 h-auto text-sm font-bold shadow-sm transition-all active:scale-95"
+          >
+            Add to Cart
+          </Button>
         </div>
       </div>
     </div>

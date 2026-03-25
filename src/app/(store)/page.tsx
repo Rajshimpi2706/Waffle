@@ -1,168 +1,115 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Star } from 'lucide-react';
+import { ArrowRight, Star, ShoppingBag, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ProductCard } from '@/components/ui/ProductCard';
-import { createClient } from '@/lib/supabase/server';
-import type { Product } from '@/types';
+import { PRODUCTS } from '@/data/products';
+import { Badge } from '@/components/ui/Badge';
 
-// Force dynamic fetch for the homepage to ensure latest featured items
-export const revalidate = 60;
-
-export default async function HomePage() {
-  const supabase = await createClient();
-
-  // Fetch featured products
-  const { data: featuredProducts } = await supabase
-    .from('products')
-    .select(`
-      *,
-      category:categories(name, slug)
-    `)
-    .eq('is_featured', true)
-    .eq('is_available', true)
-    .order('sort_order', { ascending: true })
-    .limit(4);
+export default function HomePage() {
+  const featuredProducts = PRODUCTS.filter(p => p.is_featured).slice(0, 4);
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-[85vh] min-h-[600px] flex items-center justify-center overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/waffle2.png"
-            alt="Delicious Belgian Waffles"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-black/60" /> {/* Dark overlay */}
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-[#3B1F0A]">
+        {/* Background Pattern/Texture */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]" />
         </div>
 
-        <div className="container relative z-10 px-4 md:px-6 text-center">
-          <Badge variant="gold" className="mb-6 animate-fade-in inline-flex py-1 px-4 text-xs font-bold uppercase tracking-widest">
-            Handcrafted with love
-          </Badge>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-6 leading-tight animate-fade-in drop-shadow-md" style={{ animationDelay: '100ms' }}>
-            The Perfect Crunch in <br className="hidden md:block" /> Every Bite.
+        <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#C17839]/20 border border-[#C17839]/30 text-[#F0BC5E] text-xs font-bold uppercase tracking-widest mb-8 animate-fade-in shadow-xl backdrop-blur-md">
+            <Star size={14} className="fill-[#F0BC5E]" />
+            Premium Belgian Waffles
+          </div>
+          
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-white mb-6 leading-[1.1] animate-fade-in drop-shadow-2xl">
+            Waffle <span className="text-[#C17839]">Wala</span>
           </h1>
-          <p className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto font-light leading-relaxed animate-fade-in" style={{ animationDelay: '200ms' }}>
-            Experience authentic Belgian waffles, freshly baked daily using premium ingredients and topped with pure decadence.
+          
+          <p className="text-xl md:text-2xl text-[#FDF6EC]/90 mb-10 max-w-2xl mx-auto font-medium italic animate-fade-in" style={{ animationDelay: '100ms' }}>
+            "Har Bite Mein Happiness"
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: '300ms' }}>
-            <Link href="/menu">
-              <Button size="xl" variant="primary" className="w-full sm:w-auto text-lg rounded-full px-8 drop-shadow-lg">
-                Order Now
-              </Button>
-            </Link>
-            <Link href="/menu#bestsellers">
-              <Button size="xl" variant="secondary" className="w-full sm:w-auto text-lg rounded-full px-8 bg-white/10 text-white border-white/20 hover:bg-white/20 backdrop-blur-md">
-                View Menu
+
+          <p className="text-lg text-white/70 mb-12 max-w-2xl mx-auto font-light leading-relaxed animate-fade-in hidden md:block" style={{ animationDelay: '200ms' }}>
+            Experience the crunch of authentic Belgian waffles, drizzled with premium chocolate and topped with pure joy. Freshly baked, just for you.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in w-full max-w-md mx-auto" style={{ animationDelay: '300ms' }}>
+            <Link href="/menu" className="w-full sm:w-auto">
+              <Button size="xl" className="w-full sm:w-auto text-lg rounded-full px-12 bg-[#C17839] hover:bg-[#A8662D] text-white border-none shadow-2xl transition-all active:scale-95 flex items-center gap-2">
+                Order Now <ArrowRight size={20} />
               </Button>
             </Link>
           </div>
         </div>
+
+        {/* Decorative elements */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FDF6EC] to-transparent z-0" />
       </section>
 
-      {/* Offers Banner */}
-      <section className="bg-[#3B1F0A] text-white py-12">
+      {/* Trust Badges */}
+      <section className="py-12 bg-[#FDF6EC] border-b border-[#F5E6CC]">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="flex items-start gap-4 p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-              <div className="bg-[#C17839] text-white p-3 rounded-xl">
-                <span className="font-serif text-2xl font-bold">%</span>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#C17839] border border-[#F5E6CC]">
+                <Zap size={28} />
               </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-1">Get 10% Off</h3>
-                <p className="text-white/70 text-sm">Use code <strong className="text-[#E8A535]">WAFFLE10</strong> on orders above ₹99.</p>
-              </div>
+              <h3 className="font-bold text-[#3B1F0A] text-sm">Fast Delivery</h3>
             </div>
-            <div className="flex items-start gap-4 p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-               <div className="bg-[#E8A535] text-[#3B1F0A] p-3 rounded-xl">
-                <Star size={24} />
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#C17839] border border-[#F5E6CC]">
+                <Star size={28} />
               </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-1">First Time?</h3>
-                <p className="text-white/70 text-sm">Flat ₹50 off on your first order. Code: <strong className="text-[#E8A535]">FIRSTWAFFLE</strong></p>
-              </div>
+              <h3 className="font-bold text-[#3B1F0A] text-sm">Premium Quality</h3>
             </div>
-            <div className="hidden lg:flex items-start gap-4 p-6 rounded-2xl bg-[#C17839]/20 border border-[#C17839]/30">
-              <div className="bg-white text-[#C17839] p-3 rounded-xl">
-                <span className="font-serif text-2xl font-bold">⚡</span>
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#C17839] border border-[#F5E6CC]">
+                <ShoppingBag size={28} />
               </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-1 text-[#F0BC5E]">Fast Delivery</h3>
-                <p className="text-white/70 text-sm">Hot & crispy waffles delivered in under 45 minutes.</p>
+              <h3 className="font-bold text-[#3B1F0A] text-sm">Freshly Baked</h3>
+            </div>
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#C17839] border border-[#F5E6CC]">
+                <span className="text-2xl font-bold">100%</span>
               </div>
+              <h3 className="font-bold text-[#3B1F0A] text-sm">Vegetarian</h3>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-20 bg-[#FDF6EC]">
+      {/* Featured Section */}
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="flex items-end justify-between mb-12">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-serif font-bold text-[#3B1F0A] mb-3">Chef's Specials</h2>
-              <p className="text-[#8B5E3C] max-w-xl">Our most loved creations, handpicked for you. Guaranteed to satisfy your sweet tooth.</p>
-            </div>
-            <Link href="/menu" className="hidden md:flex items-center gap-2 text-[#C17839] font-medium hover:text-[#A8662D] transition-colors">
-              See All Menu <ArrowRight size={20} />
-            </Link>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-[#3B1F0A] mb-4">Our Bestsellers</h2>
+            <div className="w-24 h-1.5 bg-[#C17839] mx-auto rounded-full mb-6" />
+            <p className="text-[#8B5E3C] max-w-xl mx-auto">Discover the waffles that have won hearts across the city.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts?.map((product) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {featuredProducts.map((product) => (
               <ProductCard
                 key={product.id}
-                product={product as Product}
+                product={product}
               />
             ))}
           </div>
 
-          <div className="mt-10 text-center md:hidden">
+          <div className="mt-20 text-center">
             <Link href="/menu">
-              <Button variant="outline" className="w-full rounded-full">
+              <Button variant="outline" size="xl" className="rounded-full border-2 border-[#3B1F0A] text-[#3B1F0A] hover:bg-[#3B1F0A] hover:text-white px-12 font-bold transition-all">
                 Explore Full Menu
               </Button>
             </Link>
           </div>
         </div>
       </section>
-
-      {/* Testimonials */}
-      <section className="py-20 bg-white border-t border-[#F5E6CC]">
-        <div className="container mx-auto px-4 md:px-6 text-center">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-[#3B1F0A] mb-12">What Our Customers Say</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <TestimonialCard
-              text="Hands down the best waffles I've had in the city! The Lotus Biscoff waffle is an absolute game-changer. Crispy on the outside, perfectly soft inside."
-              author="Priya S."
-              rating={5}
-            />
-            <TestimonialCard
-              text="Ordered delivery and was worried it would be soggy, but they arrived piping hot and still crispy! Packaging is premium. Excellent service."
-              author="Rahul M."
-              rating={5}
-            />
-            <TestimonialCard
-              text="The Dark Choco Fudge is heaven for chocolate lovers. Generous toppings and perfectly balanced sweetness. My new go-to dessert place."
-              author="Anika K."
-              rating={5}
-            />
-          </div>
-        </div>
-      </section>
     </div>
   );
-}
-
-function Badge({ children, variant, className }: { children: React.ReactNode, variant?: string, className?: string }) {
-  // Simple local badge for the hero section to avoid client-side imports in this async server component
-  const colors = variant === 'gold' ? 'bg-[#E8A535] text-[#3B1F0A]' : 'bg-white text-black';
-  return <span className={`${colors} ${className}`}>{children}</span>;
 }
 
 function TestimonialCard({ text, author, rating }: { text: string, author: string, rating: number }) {

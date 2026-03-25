@@ -44,7 +44,6 @@ export function Navbar() {
   const navLinks = [
     { name: 'Home', href: '/' },
     { name: 'Menu', href: '/menu' },
-    { name: 'Track Order', href: '/track-order-bridge' }, // We'll make a bridge page for tracking
   ];
 
   return (
@@ -57,9 +56,12 @@ export function Navbar() {
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 z-50">
+            <Link href="/" className="flex flex-col z-50">
               <span className="font-serif text-2xl font-bold tracking-tight text-[#3B1F0A]">
-                Waffle<span className="text-[#C17839]">House</span>.
+                Waffle <span className="text-[#C17839]">Wala</span>
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-[#8B5E3C] font-bold -mt-1 leading-none">
+                Har Bite Mein Happiness
               </span>
             </Link>
 
@@ -80,27 +82,20 @@ export function Navbar() {
 
             {/* Right Actions */}
             <div className="flex items-center gap-2 md:gap-4 z-50">
-              {/* Profile */}
-              {user ? (
-                <Link href="/account" className="p-2 text-[#8B5E3C] hover:text-[#C17839] transition-colors hidden sm:block">
-                  <User size={22} />
-                </Link>
-              ) : (
-                <Link href="/login" className="hidden sm:block">
-                  <Button variant="ghost" size="sm" className="hidden md:inline-flex">Log In</Button>
-                </Link>
-              )}
+              {/* Auth disabled for Phase 1 */}
 
-              {/* Cart Drawer Trigger (for now just links to checkout/cart page if we make it a full page, but let's assume we build a drawer or page) */}
-              {/* Note: In a real app we might open a drawer here. For now, we link to cart/checkout page. */}
-              <Link href="/checkout" className="relative p-2 text-[#3B1F0A] hover:text-[#C17839] transition-colors flex items-center min-h-[44px] min-w-[44px] justify-center">
+              {/* Cart Toggle */}
+              <button 
+                onClick={() => document.dispatchEvent(new CustomEvent('open-cart'))}
+                className="relative p-2 text-[#3B1F0A] hover:text-[#C17839] transition-colors flex items-center min-h-[44px] min-w-[44px] justify-center"
+              >
                 <ShoppingBag size={24} strokeWidth={1.5} />
                 {cartItemCount > 0 && (
-                  <span className="absolute top-1 right-0 w-5 h-5 bg-[#E8A535] text-[#3B1F0A] text-xs font-bold rounded-full flex items-center justify-center transform translate-x-1 -translate-y-1 shadow-sm">
+                  <span className="absolute top-1 right-0 w-5 h-5 bg-[#C17839] text-white text-[10px] font-bold rounded-full flex items-center justify-center transform translate-x-1 -translate-y-1 shadow-sm">
                     {cartItemCount > 99 ? '99+' : cartItemCount}
                   </span>
                 )}
-              </Link>
+              </button>
 
               {/* Mobile Menu Toggle */}
               <button
