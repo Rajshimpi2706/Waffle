@@ -1,26 +1,207 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Brand Colors */
+  --color-chocolate: #3B1F0A;
+  --color-chocolate-light: #5C3317;
+  --color-caramel: #C17839;
+  --color-caramel-light: #D9985A;
+  --color-cream: #FDF6EC;
+  --color-cream-dark: #F5E6CC;
+  --color-gold: #E8A535;
+  --color-gold-light: #F0BC5E;
+  --color-bark: #8B5E3C;
+
+  /* Fonts (References next/font variables from layout.tsx) */
+  --font-serif: var(--font-serif);
+  --font-sans: var(--font-sans);
+
+  /* Spacing extras */
+  --spacing-18: 4.5rem;
+  --spacing-22: 5.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  background-color: var(--color-cream);
+  color: var(--color-chocolate);
+  line-height: 1.6;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+h1, h2, h3 {
+  font-family: var(--font-serif);
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+/* ============================================================
+   SCROLLBAR STYLING
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track { background: var(--color-cream-dark); }
+::-webkit-scrollbar-thumb {
+  background: var(--color-caramel);
+  border-radius: 3px;
+}
+
+/* ============================================================
+   FOCUS STYLES (accessibility)
+   ============================================================ */
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+.animate-fade-in       { animation: fadeIn 0.4s ease both; }
+.animate-slide-in      { animation: slideInRight 0.3s ease both; }
+.animate-scale-in      { animation: scaleIn 0.25s ease both; }
+.animate-spin          { animation: spin 0.8s linear infinite; }
+.animate-pulse         { animation: pulse 1.5s ease-in-out infinite; }
+
+/* ============================================================
+   SKELETON LOADER
+   ============================================================ */
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--color-cream-dark) 25%,
+    #ecdcc0 50%,
+    var(--color-cream-dark) 75%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 8px;
+}
+
+/* ============================================================
+   CARD BASE
+   ============================================================ */
+.card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(59, 31, 10, 0.08);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card:hover {
+  box-shadow: 0 8px 32px rgba(59, 31, 10, 0.14);
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   MOBILE STICKY BOTTOM BAR
+   ============================================================ */
+.sticky-bottom-cta {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: white;
+  border-top: 1px solid var(--color-cream-dark);
+  padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+/* ============================================================
+   OVERLAY / BACKDROP
+   ============================================================ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(59, 31, 10, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 50;
+}
+
+/* ============================================================
+   FORM ELEMENTS
+   ============================================================ */
+.input-base {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid #E5D5C0;
+  border-radius: 10px;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  background: white;
+  color: var(--color-chocolate);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  min-height: 44px; /* Mobile tap target */
+}
+.input-base:focus {
+  outline: none;
+  border-color: var(--color-caramel);
+  box-shadow: 0 0 0 3px rgba(193, 120, 57, 0.15);
+}
+.input-base::placeholder {
+  color: #C4A882;
+}
+.input-base.error {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* ============================================================
+   BADGE
+   ============================================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
 }
