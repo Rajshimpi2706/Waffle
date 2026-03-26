@@ -129,7 +129,7 @@ export function ProductsClient({ initialProducts, categories, toppings, adminRol
             <tr>
               <th className="px-6 py-4 font-medium">Product</th>
               <th className="px-6 py-4 font-medium">Category / Type</th>
-              <th className="px-6 py-4 font-medium text-right">Base Price</th>
+              <th className="px-6 py-4 font-medium text-right">Unit Price</th>
               <th className="px-6 py-4 font-medium text-center">Status / Stock</th>
               <th className="px-6 py-4 font-medium text-right w-32">Actions</th>
             </tr>
@@ -173,7 +173,7 @@ export function ProductsClient({ initialProducts, categories, toppings, adminRol
                   </td>
 
                   <td className="px-6 py-4 text-right font-medium text-gray-900">
-                    {formatCurrency(product.base_price)}
+                    {formatCurrency(product.price)}
                   </td>
 
                   <td className="px-6 py-4 text-center">
@@ -189,18 +189,7 @@ export function ProductsClient({ initialProducts, categories, toppings, adminRol
                          {product.is_available ? 'Available' : 'Hidden'}
                       </button>
                       
-                      {product.track_inventory ? (
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                          product.stock_quantity! <= 0 ? 'bg-red-100 text-red-800' : 
-                          product.stock_quantity! <= 10 ? 'bg-orange-100 text-orange-800' : 'text-gray-500'
-                        }`}>
-                          Stock: {product.stock_quantity}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-400 italic">No tracking</span>
-                      )}
-                      
-                      {(product.is_sold_out || (product.track_inventory && product.stock_quantity! <= 0)) && (
+                      {(!product.is_available) && (
                          <Badge variant="destructive" className="text-[10px] uppercase scale-90">Sold Out</Badge>
                       )}
                     </div>

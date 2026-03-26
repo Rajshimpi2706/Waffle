@@ -19,6 +19,26 @@ export function MenuClient({ initialCategories, initialProducts }: MenuClientPro
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
+
+  // Derive categories from products if not provided
+  const categories = useMemo(() => {
+    if (initialCategories.length > 0) return initialCategories;
+    
+    const uniqueCats = new Map();
+    initialProducts.forEach((p: any) => {
+      // Handle both table-name (plural) and alias (singular) joins
+      const catData = p.category || p.categories;
+      
+      // Supabase can return as an object or a single-item array
+      const cat = Array.isArray(catData) ? catData[0] : catData;
+      
+      if (cat && cat.id) {
+        uniqueCats.set(cat.id, cat);
+      }
+    });
+    return Array.from(uniqueCats.values()) as Category[];
+  }, [initialCategories, initialProducts]);
+
   const addItem = useCartStore((state) => state.addItem);
 
   // Filter and sort logic
@@ -44,9 +64,9 @@ export function MenuClient({ initialCategories, initialProducts }: MenuClientPro
     result.sort((a, b) => {
       switch (sortBy) {
         case 'price-low':
-          return a.base_price - b.base_price;
+          return a.price - b.price;
         case 'price-high':
-          return b.base_price - a.base_price;
+          return b.price - a.price;
         case 'name-asc':
           return a.name.localeCompare(b.name);
         case 'featured':
@@ -64,7 +84,7 @@ export function MenuClient({ initialCategories, initialProducts }: MenuClientPro
       productId: product.id,
       productName: product.name,
       quantity: 1,
-      unitPrice: product.base_price, // Assuming base price is final if no variants
+      unitPrice: product.price, // Using the new price property
       toppings: []
     });
     toast.success(`${product.name} added to cart!`, {
@@ -117,7 +137,7 @@ export function MenuClient({ initialCategories, initialProducts }: MenuClientPro
                 All Full Menu
               </button>
             </li>
-            {initialCategories.map((cat) => (
+            {categories.map((cat) => (
               <li key={cat.id}>
                 <button
                   onClick={() => setActiveCategory(cat.id)}
@@ -146,7 +166,7 @@ export function MenuClient({ initialCategories, initialProducts }: MenuClientPro
            >
              All
            </button>
-           {initialCategories.map((cat) => (
+           {categories.map((cat) => (
              <button
                key={cat.id}
                onClick={() => setActiveCategory(cat.id)}

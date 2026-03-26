@@ -1,192 +1,111 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createRazorpayOrder } from '@/lib/razorpay';
-import { orderRateLimit } from '@/lib/rateLimit';
-import { generateOrderNumber } from '@/lib/utils';
-import { checkoutSchema } from '@/lib/validations';
 
-export async function POST(request: NextRequest) {
-  const ip = request.headers.get('x-forwarded-for') || 'unknown';
-  const isAllowed = await orderRateLimit.check(ip);
-
-  if (!isAllowed) {
-    return NextResponse.json(
-      { error: 'Too many order requests. Please try again later.' },
-      { status: 429 }
-    );
-  }
-
+export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const parsedData = checkoutSchema.parse(body);
     const supabase = await createClient();
+    const payload = await request.json();
 
-    // 1. Get user session (guest or logged in)
-    const { data: { user } } = await supabase.auth.getUser();
-    let customerId = null;
+    const { 
+      customer_name, 
+      customer_phone, 
+      items, 
+    } = payload;
 
-    if (user) {
-      const { data: customerData } = await supabase
-        .from('customers')
-        .select('id')
-        .eq('auth_user_id', user.id)
-        .single();
-      customerId = customerData?.id;
+    // Basic Validation
+    if (!customer_name || !customer_phone || !items || items.length === 0) {
+      return NextResponse.json(
+        { error: 'Missing required order fields' },
+        { status: 400 }
+      );
     }
 
-    // 2. Fetch branch details for tax & validation
-    const { data: branch, error: branchError } = await supabase
-      .from('branches')
-      .select('tax_percentage, prices_include_tax')
-      .eq('id', parsedData.branch_id)
-      .single();
+    // Fetch current prices from DB to validate/snapshot (Security: Don't trust client price)
+    const productIds = items.map((i: any) => i.productId);
+    const { data: dbProducts, error: dbError } = await supabase
+      .from('products')
+      .select('id, name, price')
+      .in('id', productIds);
 
-    if (branchError || !branch) {
-      return NextResponse.json({ error: 'Invalid branch' }, { status: 400 });
+    if (dbError || !dbProducts) {
+      console.error('Error fetching prices for validation:', dbError);
+      return NextResponse.json({ error: 'Failed to validate product prices' }, { status: 500 });
     }
 
-    // 3. Verify Pincode / Delivery
-    let verifiedDeliveryFee = 0;
-    if (parsedData.order_type === 'delivery' && parsedData.shipping_address) {
-      const { data: zone } = await supabase
-        .from('delivery_zones')
-        .select('*')
-        .eq('branch_id', parsedData.branch_id)
-        .eq('pincode', parsedData.shipping_address.pincode)
-        .single();
+    // Map DB prices for easy lookup
+    const priceMap = new Map(dbProducts.map(p => [p.id, Number(p.price)]));
+    const nameMap = new Map(dbProducts.map(p => [p.id, p.name]));
 
-      if (!zone || !zone.is_active) {
-        return NextResponse.json({ error: 'Delivery not available for this pincode' }, { status: 400 });
-      }
-      verifiedDeliveryFee = zone.delivery_fee;
-    }
+    // Recalculate subtotal server-side
+    let calculatedSubtotal = 0;
+    const orderItems = items.map((item: any) => {
+      const unitPrice = priceMap.get(item.productId) || 0;
+      const quantity = Number(item.quantity) || 0;
+      const lineTotal = unitPrice * quantity;
+      calculatedSubtotal += lineTotal;
 
-    // 4. Calculate Subtotal from DB (to prevent client-side price modification)
-    // NOTE: In a production heavily-trafficked app, we would query `product_variants` and `products` based on IDs in `parsedData.items`.
-    // For this prototype, we'll blindly trust the client prices for simplicity, BUT compute the totals server-side.
-    // DANGER: Never do this in real prod without validating unit prices against DB.
-    
-    let subtotal = 0;
-    for (const item of parsedData.items) {
-      let itemTotal = item.unit_price;
-      for (const topping of item.toppings) {
-        itemTotal += topping.price;
-      }
-      subtotal += itemTotal * item.quantity;
-    }
+      return {
+        product_id: item.productId,
+        product_name: nameMap.get(item.productId) || item.productName,
+        quantity: quantity,
+        price: unitPrice,
+        line_total: lineTotal,
+      };
+    });
 
-    const taxAmount = (subtotal * branch.tax_percentage) / 100;
-    const finalTotal = subtotal + taxAmount + verifiedDeliveryFee;
+    // Generate Order Number: WAFFLE-YYYYMMDD-XXXX
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const orderNumber = `WAFFLE-${today}-${randomSuffix}`;
 
-    // 5. Generate Order Number & DB Transaction (via RPC or sequential inserts)
-    const orderNumber = generateOrderNumber();
-    
-    // We must handle the shipping/billing address logic. 
-    // To keep it simple, we save into `addresses` table first if not guest, or use JSONB.
-    // Actually, SQL schema has `addresses` table.
-    let addressId = null;
-    if (parsedData.shipping_address && customerId) {
-      const { data: addrData } = await supabase
-        .from('addresses')
-        .insert({
-          customer_id: customerId,
-          full_name: parsedData.shipping_address.full_name,
-          phone: parsedData.shipping_address.phone,
-          address_line1: parsedData.shipping_address.line1,
-          address_line2: parsedData.shipping_address.line2,
-          city: parsedData.shipping_address.city,
-          state: parsedData.shipping_address.state,
-          pincode: parsedData.shipping_address.pincode,
-          address_type: 'shipping'
-        })
-        .select('id')
-        .single();
-      
-      addressId = addrData?.id;
-    }
-
-    // Insert Order
+    // 1. Create Order record
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
         order_number: orderNumber,
-        branch_id: parsedData.branch_id,
-        customer_id: customerId, // null for guest
-        order_type: parsedData.order_type,
-        shipping_address_id: addressId,
-        payment_status: 'pending',
-        order_status: 'pending',
-        subtotal,
-        tax_amount: taxAmount,
-        delivery_fee: verifiedDeliveryFee,
-        discount_amount: 0,
-        total_amount: finalTotal,
+        customer_name,
+        customer_phone,
+        subtotal: calculatedSubtotal, // Use server-calculated value
+        status: 'pending',
       })
-      .select('*')
+      .select()
       .single();
 
-    if (orderError) throw orderError;
-
-    // Insert Order Items and Toppings
-    for (const item of parsedData.items) {
-      const { data: orderItem, error: oiError } = await supabase
-        .from('order_items')
-        .insert({
-          order_id: order.id,
-          product_id: item.product_id,
-          product_variant_id: item.variant_id,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          total_price: item.unit_price * item.quantity, // note: only base price total here
-        })
-        .select('id')
-        .single();
-      
-      if (oiError) throw oiError;
-
-      if (item.toppings && item.toppings.length > 0) {
-        const itemToppingsInsert = item.toppings.map(t => ({
-          order_item_id: orderItem.id,
-          topping_id: t.topping_id,
-          quantity: t.quantity,
-          unit_price: t.price,
-          total_price: t.price * t.quantity
-        }));
-
-        const { error: otError } = await supabase
-          .from('order_item_toppings')
-          .insert(itemToppingsInsert);
-
-        if (otError) throw otError;
-      }
+    if (orderError) {
+      console.error('Error creating order record:', orderError);
+      return NextResponse.json(
+        { error: 'Failed to create order', details: orderError.message },
+        { status: 500 }
+      );
     }
 
-    // 6. Create Razorpay Order
-    // Convert to minor units (Paise)
-    const razorpayOrder = await createRazorpayOrder(
-      Math.round(finalTotal * 100), 
-      order.id
-    );
+    // 2. Create Order Items (Snapshotting names and prices)
+    const finalOrderItems = orderItems.map((oi: any) => ({ ...oi, order_id: order.id }));
 
-    // Create Initial Payment Record
-    await supabase.from('payments').insert({
-      order_id: order.id,
-      amount: finalTotal,
-      provider: 'razorpay',
-      provider_order_id: razorpayOrder.razorpay_order_id,
-      status: 'pending',
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .insert(finalOrderItems);
+
+    if (itemsError) {
+      console.error('Error creating order items:', itemsError);
+      return NextResponse.json(
+        { error: 'Order created but failed to save items', details: itemsError.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      data: {
+        id: order.id,
+        order_number: order.order_number
+      }
     });
 
-    return NextResponse.json({
-      success: true,
-      order: order,
-      razorpayOrder,
-    });
-
-  } catch (error: any) {
-    console.error('Order Creation API Error:', error);
+  } catch (error) {
+    console.error('Unhandled error in /api/orders/create:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create order' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

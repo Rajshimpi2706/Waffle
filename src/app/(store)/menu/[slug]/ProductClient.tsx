@@ -6,26 +6,28 @@ import Link from 'next/link';
 import { ArrowLeft, Check, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, generateId } from '@/lib/utils';
 import { useCartStore } from '@/lib/cart';
 import { toast } from 'sonner';
+import type { Product } from '@/types';
 
 // Placeholder blur data URL
 const blurDataURL =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mM8+vbnfwAHtAMFzD085QAAAABJRU5ErkJggg==';
 const fallbackImage = 'https://images.unsplash.com/photo-1562376552-0d160a2f4277?q=80&w=600&auto=format&fit=crop';
 
-export function ProductClient({ product }: { product: any }) {
+export function ProductClient({ product }: { product: Product }) {
   const [imgSrc, setImgSrc] = useState(product.image_url || fallbackImage);
   const [quantity, setQuantity] = useState(1);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(
-    product.variants?.length > 0 ? product.variants[0].id : null
+    (product.variants && product.variants.length > 0) ? product.variants[0].id : null
   );
   
   // Initialize default toppings
   const [selectedToppings, setSelectedToppings] = useState<Set<string>>(() => {
     const defaults = new Set<string>();
-    product.toppings?.forEach((t: any) => {
+    product.toppings?.forEach((t) => {
+      // @ts-ignore - is_default might be in DB but not in minimal type
       if (t.is_default) defaults.add(t.id);
     });
     return defaults;
@@ -33,25 +35,27 @@ export function ProductClient({ product }: { product: any }) {
 
   const addItem = useCartStore((state) => state.addItem);
 
-  const isSoldOut = product.is_sold_out || !product.is_available;
+  const isSoldOut = !product.is_available;
 
   const currentVariant = useMemo(() => {
-    return product.variants?.find((v: any) => v.id === selectedVariantId);
+    return product.variants?.find((v) => v.id === selectedVariantId);
   }, [product.variants, selectedVariantId]);
 
-  const basePrice = currentVariant ? currentVariant.price : product.base_price;
+  // Total price logic: Base Product Price + Variant Modifier + Toppings
+  const basePrice = Number(product.price) || 0;
+  const variantModifier = currentVariant ? Number(currentVariant.price_modifier) : 0;
 
   const toppingsTotal = useMemo(() => {
     let total = 0;
-    product.toppings?.forEach((t: any) => {
+    product.toppings?.forEach((t) => {
       if (selectedToppings.has(t.id)) {
-        total += t.price;
+        total += Number(t.price) || 0;
       }
     });
     return total;
   }, [product.toppings, selectedToppings]);
 
-  const finalUnitPrice = basePrice + toppingsTotal;
+  const finalUnitPrice = basePrice + variantModifier + toppingsTotal;
   const totalPrice = finalUnitPrice * quantity;
 
   const handleToppingToggle = (toppingId: string) => {
@@ -66,20 +70,22 @@ export function ProductClient({ product }: { product: any }) {
 
   const handleAddToCart = () => {
     const toppingsToAdd = product.toppings
-      ?.filter((t: any) => selectedToppings.has(t.id))
-      .map((t: any) => ({
+      ?.filter((t) => selectedToppings.has(t.id))
+      .map((t) => ({
+        id: generateId(),
         topping_id: t.id,
         name: t.name,
-        price: t.price,
-        quantity: 1, // Topping quantity corresponds to product quantity per item in most POS logic
+        price: Number(t.price) || 0,
       })) || [];
 
     addItem({
       productId: product.id,
       productName: product.name,
+      productImage: product.image_url,
       variantId: selectedVariantId || undefined,
+      variantName: currentVariant?.name,
       quantity,
-      unitPrice: basePrice,
+      unitPrice: basePrice + variantModifier, // Base price inclusive of variant
       toppings: toppingsToAdd,
     });
 
@@ -124,15 +130,9 @@ export function ProductClient({ product }: { product: any }) {
             {product.category && (
               <Badge variant="secondary">{product.category.name}</Badge>
             )}
-            {product.is_vegetarian ? (
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
-                <span className="block w-2.5 h-2.5 rounded-full bg-green-600"></span> Veg
-              </span>
-            ) : (
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200">
-                <span className="block w-0 h-0 border-l-[5px] border-r-[5px] border-b-[8px] border-l-transparent border-r-transparent border-b-red-600"></span> Non-Veg
-              </span>
-            )}
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
+              <span className="block w-2.5 h-2.5 rounded-full bg-green-600"></span> Veg
+            </span>
             {product.is_featured && <Badge variant="gold">Bestseller</Badge>}
           </div>
 
@@ -147,7 +147,7 @@ export function ProductClient({ product }: { product: any }) {
                   Size Options <span className="text-xs font-normal text-[#8B5E3C] bg-[#F5E6CC] px-2 py-0.5 rounded-full">Required</span>
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
-                  {product.variants.map((v: any) => (
+                  {product.variants.map((v) => (
                     <button
                       key={v.id}
                       onClick={() => setSelectedVariantId(v.id)}
@@ -159,7 +159,9 @@ export function ProductClient({ product }: { product: any }) {
                       } ${isSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <span className="font-medium text-[#3B1F0A]">{v.name}</span>
-                      <span className="text-sm text-[#8B5E3C]">{formatCurrency(v.price)}</span>
+                      <span className="text-sm text-[#8B5E3C]">
+                        {v.price_modifier > 0 ? `+${formatCurrency(v.price_modifier)}` : 'Standard'}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -173,7 +175,7 @@ export function ProductClient({ product }: { product: any }) {
                   Add-ons & Toppings <span className="text-xs font-normal text-[#8B5E3C] bg-[#F5E6CC] px-2 py-0.5 rounded-full">Optional</span>
                 </h3>
                 <div className="space-y-2">
-                  {product.toppings.map((t: any) => {
+                  {product.toppings.map((t) => {
                     const isSelected = selectedToppings.has(t.id);
                     return (
                       <button

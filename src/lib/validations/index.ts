@@ -77,13 +77,9 @@ export const productSchema = z.object({
   slug: z.string().min(2).max(200).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase with hyphens'),
   description: z.string().max(1000).optional(),
   category_id: z.string().uuid(),
-  base_price: z.number().positive().max(99999),
+  price: z.number().positive().max(99999),
   is_available: z.boolean().default(true),
-  is_sold_out: z.boolean().default(false),
   is_featured: z.boolean().default(false),
-  is_vegetarian: z.boolean().default(true),
-  track_inventory: z.boolean().default(false),
-  stock_quantity: z.number().int().min(0).optional().nullable(),
   sort_order: z.number().int().min(0).default(0),
 });
 

@@ -31,7 +31,7 @@ export function ProductCard({ product }: { product: Product }) {
       productName: product.name,
       productImage: product.image_url,
       quantity: 1,
-      unitPrice: product.base_price,
+      unitPrice: Number(product.price),
       toppings: [],
     });
     // Trigger cart drawer open via event
@@ -77,7 +77,7 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="mt-auto flex items-center justify-between gap-4">
           <div className="flex flex-col">
             <span className="text-[10px] uppercase tracking-wider text-[#A17C5F] font-bold">Price</span>
-            <span className="text-xl font-bold text-[#3B1F0A]">₹{product.base_price}</span>
+            <span className="text-xl font-bold text-[#3B1F0A]">₹{product.price}</span>
           </div>
           
           <Button 

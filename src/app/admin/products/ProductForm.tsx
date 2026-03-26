@@ -28,13 +28,10 @@ export function ProductForm({ product, categories, toppings, onSuccess }: Produc
         slug: formData.get('slug'),
         description: formData.get('description'),
         category_id: formData.get('category_id'),
-        base_price: parseFloat(formData.get('base_price') as string),
+        price: parseFloat(formData.get('price') as string),
         image_url: formData.get('image_url') || null,
         is_available: formData.get('is_available') === 'on',
         is_featured: formData.get('is_featured') === 'on',
-        is_vegetarian: formData.get('is_vegetarian') === 'on',
-        track_inventory: formData.get('track_inventory') === 'on',
-        stock_quantity: formData.get('track_inventory') === 'on' ? parseInt(formData.get('stock_quantity') as string) : null,
       };
 
       if (isEditing) {
@@ -90,8 +87,8 @@ export function ProductForm({ product, categories, toppings, onSuccess }: Produc
            </Select>
         </div>
         <div>
-           <label className="block text-sm font-medium text-gray-700 mb-1">Base Price (₹)</label>
-           <Input type="number" step="0.01" name="base_price" required defaultValue={product?.base_price} min={0} />
+           <label className="block text-sm font-medium text-gray-700 mb-1">Product Price (₹)</label>
+           <Input type="number" step="0.01" name="price" required defaultValue={product?.price} min={0} />
         </div>
       </div>
 
@@ -101,59 +98,21 @@ export function ProductForm({ product, categories, toppings, onSuccess }: Produc
       </div>
 
       {/* Toggles */}
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 gap-4 grid grid-cols-2 sm:grid-cols-4">
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 gap-4 grid grid-cols-2 sm:grid-cols-2">
          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
            <input type="checkbox" name="is_available" defaultChecked={product ? product.is_available : true} className="rounded text-[#3B1F0A] focus:ring-[#3B1F0A] w-4 h-4" />
-           Available
+           Available for Order
          </label>
          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
            <input type="checkbox" name="is_featured" defaultChecked={product?.is_featured} className="rounded text-[#3B1F0A] focus:ring-[#3B1F0A] w-4 h-4" />
-           Featured
-         </label>
-         <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-           <input type="checkbox" name="is_vegetarian" defaultChecked={product ? product.is_vegetarian : true} className="rounded text-green-600 focus:ring-green-600 w-4 h-4" />
-           Vegetarian
+           Feature on Menu
          </label>
       </div>
 
-      {/* Inventory Tracking section */}
-      <div className="border border-gray-200 rounded-xl p-4">
-         <h4 className="text-sm font-semibold text-gray-900 mb-3 border-b border-gray-100 pb-2">Inventory Management</h4>
-         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-              <input 
-                type="checkbox" 
-                name="track_inventory" 
-                defaultChecked={product?.track_inventory} 
-                className="rounded text-[#3B1F0A] focus:ring-[#3B1F0A] w-4 h-4"
-                onChange={(e) => {
-                  const el = document.getElementById('stock_quantity_input') as HTMLInputElement;
-                  if (el) {
-                    el.disabled = !e.target.checked;
-                    if (!e.target.checked) el.value = '';
-                  }
-                }}
-              />
-              Track Stock Levels
-            </label>
-            <div className="flex-1 flex items-center gap-2 w-full">
-              <span className="text-sm text-gray-500 whitespace-nowrap hidden sm:inline">Current Stock:</span>
-              <Input 
-                 id="stock_quantity_input"
-                 type="number" 
-                 name="stock_quantity" 
-                 defaultValue={product?.stock_quantity ?? ''} 
-                 min={0}
-                 disabled={!product?.track_inventory}
-                 placeholder="0"
-                 className="max-w-[120px]"
-              />
-            </div>
-         </div>
-         <p className="text-xs text-gray-500 mt-2 italic">
-           When tracking is enabled, products with 0 stock will automatically be marked and enforced as "Sold Out" sitewide.
-         </p>
-      </div>
+      {/* Helper text for the simplified form */}
+      <p className="text-xs text-gray-500 mt-2 italic px-2">
+        Pricing and basic availability are synchronized directly with your Supabase database.
+      </p>
 
       <div className="flex justify-end pt-4 mt-6 border-t border-gray-100 pb-2">
          <Button type="submit" loading={loading} className="bg-gray-900 hover:bg-gray-800 px-8">

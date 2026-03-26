@@ -90,54 +90,32 @@ CREATE TABLE delivery_zones (
 -- CATEGORIES
 -- ============================================================
 CREATE TABLE categories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
-  name TEXT NOT NULL,
-  slug TEXT NOT NULL UNIQUE,
-  description TEXT,
-  image_url TEXT,
-  sort_order INTEGER NOT NULL DEFAULT 0,
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    description TEXT,
+    image_url TEXT,
+    sort_order INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- ============================================================
 -- PRODUCTS
 -- ============================================================
 CREATE TABLE products (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
-  category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
-  name TEXT NOT NULL,
-  slug TEXT NOT NULL UNIQUE,
-  description TEXT,
-  image_url TEXT,
-  base_price NUMERIC(10,2) NOT NULL,
-  is_available BOOLEAN NOT NULL DEFAULT true,
-  is_sold_out BOOLEAN NOT NULL DEFAULT false,
-  is_featured BOOLEAN NOT NULL DEFAULT false,
-  is_vegetarian BOOLEAN NOT NULL DEFAULT true,
-  track_inventory BOOLEAN NOT NULL DEFAULT false,
-  stock_quantity INTEGER,
-  sort_order INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    description TEXT,
+    price NUMERIC(10,2) NOT NULL,
+    image_url TEXT,
+    is_available BOOLEAN DEFAULT true,
+    is_featured BOOLEAN DEFAULT false,
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT now()
 );
-
--- Auto-enforce sold_out when inventory hits 0
-CREATE OR REPLACE FUNCTION enforce_stock_sold_out()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.track_inventory = true AND NEW.stock_quantity IS NOT NULL AND NEW.stock_quantity <= 0 THEN
-    NEW.is_sold_out := true;
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_stock_sold_out
-BEFORE INSERT OR UPDATE ON products
-FOR EACH ROW EXECUTE FUNCTION enforce_stock_sold_out();
 
 -- ============================================================
 -- PRODUCT VARIANTS (e.g. sizes)
@@ -195,39 +173,14 @@ CREATE TABLE coupons (
 -- ============================================================
 -- ORDERS
 -- ============================================================
-CREATE TYPE order_type AS ENUM ('delivery', 'takeaway', 'dine_in');
-CREATE TYPE order_status AS ENUM (
-  'pending', 'confirmed', 'preparing', 'ready',
-  'out_for_delivery', 'delivered', 'cancelled', 'refunded'
-);
-
 CREATE TABLE orders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  order_number TEXT UNIQUE NOT NULL,
-  branch_id UUID NOT NULL REFERENCES branches(id),
-  customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
-  address_id UUID REFERENCES addresses(id) ON DELETE SET NULL,
-  order_type order_type NOT NULL,
-  status order_status NOT NULL DEFAULT 'pending',
-  subtotal NUMERIC(10,2) NOT NULL,
-  tax_amount NUMERIC(10,2) NOT NULL DEFAULT 0,
-  delivery_fee NUMERIC(10,2) NOT NULL DEFAULT 0,
-  discount_amount NUMERIC(10,2) NOT NULL DEFAULT 0,
-  total_amount NUMERIC(10,2) NOT NULL,
-  coupon_id UUID REFERENCES coupons(id) ON DELETE SET NULL,
-  coupon_code TEXT,
-  special_instructions TEXT,
-  estimated_delivery_minutes INTEGER,
-  -- Lifecycle timestamps
-  confirmed_at TIMESTAMPTZ,
-  preparing_at TIMESTAMPTZ,
-  ready_at TIMESTAMPTZ,
-  out_for_delivery_at TIMESTAMPTZ,
-  delivered_at TIMESTAMPTZ,
-  cancelled_at TIMESTAMPTZ,
-  refunded_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_number TEXT UNIQUE NOT NULL,
+    customer_name TEXT NOT NULL,
+    customer_phone TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    subtotal NUMERIC(10,2) NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- ============================================================
@@ -251,15 +204,13 @@ $$ LANGUAGE plpgsql;
 -- ORDER ITEMS
 -- ============================================================
 CREATE TABLE order_items (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-  product_id UUID REFERENCES products(id) ON DELETE SET NULL,
-  variant_id UUID REFERENCES product_variants(id) ON DELETE SET NULL,
-  product_name TEXT NOT NULL,
-  variant_name TEXT,
-  quantity INTEGER NOT NULL DEFAULT 1,
-  unit_price NUMERIC(10,2) NOT NULL,
-  total_price NUMERIC(10,2) NOT NULL
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+    product_name TEXT NOT NULL,
+    price NUMERIC(10,2) NOT NULL,
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    line_total NUMERIC(10,2) NOT NULL
 );
 
 CREATE TABLE order_item_toppings (

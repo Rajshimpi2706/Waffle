@@ -92,22 +92,17 @@ export interface Category {
 
 export interface Product {
   id: string;
-  branch_id?: string;
   category_id?: string;
   name: string;
   slug: string;
   description?: string;
   image_url?: string;
-  base_price: number;
+  price: number;
   is_available: boolean;
-  is_sold_out: boolean;
   is_featured: boolean;
-  is_vegetarian: boolean;
-  track_inventory: boolean;
-  stock_quantity?: number;
   sort_order: number;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
   // Joins
   category?: Category;
   variants?: ProductVariant[];

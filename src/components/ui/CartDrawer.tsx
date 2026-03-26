@@ -9,7 +9,8 @@ import Image from 'next/image';
 
 export function CartDrawer() {
   const [isOpen, setIsOpen] = useState(false);
-  const { items, updateQuantity, removeItem, subtotal, itemCount } = useCartStore();
+  const { items, updateQuantity, removeItem, subtotal, itemCount, clearCart } = useCartStore();
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
@@ -91,7 +92,9 @@ export function CartDrawer() {
                       </button>
                     </div>
                     
-                    <p className="text-xs text-[#8B5E3C] mb-3">₹{item.unitPrice} per piece</p>
+                    <p className="text-xs text-[#8B5E3C] mb-3">
+                      {formatCurrency(item.unitPrice)} per piece
+                    </p>
                     
                     <div className="mt-auto flex items-center justify-between">
                       <div className="flex items-center gap-3 bg-[#FDF6EC] rounded-lg p-1 border border-[#F5E6CC]">
@@ -111,7 +114,9 @@ export function CartDrawer() {
                           <Plus size={14} />
                         </button>
                       </div>
-                      <span className="font-bold text-[#3B1F0A]">₹{item.unitPrice * item.quantity}</span>
+                      <span className="font-bold text-[#3B1F0A]">
+                        {formatCurrency(item.unitPrice * item.quantity)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -136,11 +141,47 @@ export function CartDrawer() {
                 </div>
               
               <Button 
-                className="w-full rounded-full bg-[#3B1F0A] hover:bg-[#C17839] text-white py-6 text-lg font-bold shadow-lg flex items-center justify-center gap-2 group"
-                onClick={() => alert('Checkout functionality is coming in Phase 2!')}
+                className="w-full rounded-full bg-[#3B1F0A] hover:bg-[#C17839] text-white py-6 text-lg font-bold shadow-lg flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
+                onClick={async () => {
+                  setIsPlacingOrder(true);
+                  try {
+                    const res = await fetch('/api/orders/create', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        customer_name: 'Guest User',
+                        customer_phone: '9876543210',
+                        items: items,
+                        subtotal: subtotal,
+                      }),
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (res.ok) {
+                      alert(`Order Placed Successfully! Order Number: ${data.data.order_number}`);
+                      clearCart();
+                      setIsOpen(false);
+                    } else {
+                      alert(`Failed to place order: ${data.error}`);
+                    }
+                  } catch (error) {
+                    console.error('Checkout error:', error);
+                    alert('An error occurred while placing your order.');
+                  } finally {
+                    setIsPlacingOrder(false);
+                  }
+                }}
+                disabled={isPlacingOrder}
               >
-                Proceed to Checkout
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                {isPlacingOrder ? (
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    Place Order
+                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </Button>
               
               <p className="text-center text-[10px] text-[#8B5E3C] uppercase tracking-widest font-bold">
