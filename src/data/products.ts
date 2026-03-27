@@ -2,19 +2,19 @@ import { Product, Category } from '@/types';
 
 export const PRODUCTS: Product[] = [
   {
-    id: '1',
+    id: 'abc53d96-e7fa-4e84-9947-93775cd950c7',
     name: 'Classic Waffle',
     slug: 'classic-waffle',
-    category_id: 'classic-waffles',
+    category_id: '550e8400-e29b-41d4-a716-446655440000',
     category: {
-      id: 'classic-waffles',
+      id: '550e8400-e29b-41d4-a716-446655440000',
       name: 'Classic Waffles',
       slug: 'classic-waffles',
       sort_order: 1,
       is_active: true,
       created_at: new Date().toISOString()
     },
-    price: 89,
+    price: 1,
     description: 'Freshly baked golden waffle served warm with a light drizzle of chocolate syrup. Crispy outside, soft inside — perfect for a simple and satisfying treat.',
     image_url: '/images/products/classic-waffle.png',
     is_available: true,
@@ -23,12 +23,12 @@ export const PRODUCTS: Product[] = [
     created_at: new Date().toISOString()
   },
   {
-    id: '2',
+    id: '554da48d-842c-452f-b531-95ada5f3ee9f',
     name: 'Double Chocolate Delight',
     slug: 'double-chocolate-delight',
-    category_id: 'chocolate-waffles',
+    category_id: '550e8400-e29b-41d4-a716-446655440001',
     category: {
-      id: 'chocolate-waffles',
+      id: '550e8400-e29b-41d4-a716-446655440001',
       name: 'Chocolate Waffles',
       slug: 'chocolate-waffles',
       sort_order: 2,
@@ -44,12 +44,12 @@ export const PRODUCTS: Product[] = [
     created_at: new Date().toISOString()
   },
   {
-    id: '3',
+    id: '5d4acd1f-6586-43ae-8aef-5d1d46d6ae2b',
     name: 'Triple Chocolate Blast',
     slug: 'triple-chocolate-blast',
-    category_id: 'premium-specials',
+    category_id: '550e8400-e29b-41d4-a716-446655440002',
     category: {
-      id: 'premium-specials',
+      id: '550e8400-e29b-41d4-a716-446655440002',
       name: 'Premium Specials',
       slug: 'premium-specials',
       sort_order: 3,
@@ -65,12 +65,12 @@ export const PRODUCTS: Product[] = [
     created_at: new Date().toISOString()
   },
   {
-    id: '4',
+    id: 'c4ea7fdf-b8ca-4d28-ada6-3b5766ddcdda',
     name: 'Dark Chocolate Heaven',
     slug: 'dark-chocolate-heaven',
-    category_id: 'premium-specials',
+    category_id: '550e8400-e29b-41d4-a716-446655440002',
     category: {
-      id: 'premium-specials',
+      id: '550e8400-e29b-41d4-a716-446655440002',
       name: 'Premium Specials',
       slug: 'premium-specials',
       sort_order: 3,
@@ -86,12 +86,12 @@ export const PRODUCTS: Product[] = [
     created_at: new Date().toISOString()
   },
   {
-    id: '5',
+    id: '5414f7de-3460-4ae6-a67a-8b88921aea92',
     name: 'Oreo Crunch',
     slug: 'oreo-crunch',
-    category_id: 'premium-specials',
+    category_id: '550e8400-e29b-41d4-a716-446655440002',
     category: {
-      id: 'premium-specials',
+      id: '550e8400-e29b-41d4-a716-446655440002',
       name: 'Premium Specials',
       slug: 'premium-specials',
       sort_order: 3,
@@ -110,7 +110,7 @@ export const PRODUCTS: Product[] = [
 
 export const CATEGORIES: Category[] = [
   {
-    id: 'classic-waffles',
+    id: '550e8400-e29b-41d4-a716-446655440000',
     name: 'Classic Waffles',
     slug: 'classic-waffles',
     sort_order: 1,
@@ -118,7 +118,7 @@ export const CATEGORIES: Category[] = [
     created_at: new Date().toISOString()
   },
   {
-    id: 'chocolate-waffles',
+    id: '550e8400-e29b-41d4-a716-446655440001',
     name: 'Chocolate Waffles',
     slug: 'chocolate-waffles',
     sort_order: 2,
@@ -126,7 +126,7 @@ export const CATEGORIES: Category[] = [
     created_at: new Date().toISOString()
   },
   {
-    id: 'premium-specials',
+    id: '550e8400-e29b-41d4-a716-446655440002',
     name: 'Premium Specials',
     slug: 'premium-specials',
     sort_order: 3,

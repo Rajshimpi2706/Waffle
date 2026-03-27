@@ -6,11 +6,12 @@ import { useCartStore } from '@/lib/cart';
 import { Button } from './Button';
 import { formatCurrency } from '@/lib/utils';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export function CartDrawer() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const { items, updateQuantity, removeItem, subtotal, itemCount, clearCart } = useCartStore();
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const { items, updateQuantity, removeItem, subtotal, itemCount } = useCartStore();
 
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
@@ -127,6 +128,7 @@ export function CartDrawer() {
           {/* Footer */}
           {items.length > 0 && (
             <div className="p-6 bg-white border-t border-[#F5E6CC] space-y-4">
+              <div className="space-y-2">
                 <div className="flex justify-between text-[#8B5E3C]">
                   <span>Subtotal</span>
                   <span>{formatCurrency(subtotal)}</span>
@@ -139,49 +141,18 @@ export function CartDrawer() {
                   <span>Total</span>
                   <span>{formatCurrency(subtotal)}</span>
                 </div>
-              
+              </div>
+
               <Button 
-                className="w-full rounded-full bg-[#3B1F0A] hover:bg-[#C17839] text-white py-6 text-lg font-bold shadow-lg flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
-                onClick={async () => {
-                  setIsPlacingOrder(true);
-                  try {
-                    const res = await fetch('/api/orders/create', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        customer_name: 'Guest User',
-                        customer_phone: '9876543210',
-                        items: items,
-                        subtotal: subtotal,
-                      }),
-                    });
-                    
-                    const data = await res.json();
-                    
-                    if (res.ok) {
-                      alert(`Order Placed Successfully! Order Number: ${data.data.order_number}`);
-                      clearCart();
-                      setIsOpen(false);
-                    } else {
-                      alert(`Failed to place order: ${data.error}`);
-                    }
-                  } catch (error) {
-                    console.error('Checkout error:', error);
-                    alert('An error occurred while placing your order.');
-                  } finally {
-                    setIsPlacingOrder(false);
-                  }
+                onClick={() => {
+                  setIsOpen(false);
+                  router.push('/checkout');
                 }}
-                disabled={isPlacingOrder}
+                className="w-full h-14 rounded-2xl shadow-lg hover:shadow-xl group transition-all"
+                variant="primary"
               >
-                {isPlacingOrder ? (
-                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    Place Order
-                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
+                Place Order
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </Button>
               
               <p className="text-center text-[10px] text-[#8B5E3C] uppercase tracking-widest font-bold">

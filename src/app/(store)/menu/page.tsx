@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { MenuClient } from './MenuClient';
-import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 
 export const metadata = {
   title: 'Our Delicious Menu | Waffle Wala',
@@ -14,12 +14,12 @@ import { PRODUCTS } from '@/data/products';
 
 async function getMenuData() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   // Detect placeholder values
   const isPlaceholder = !supabaseUrl || !supabaseKey || 
                         supabaseUrl.includes('your-project') || 
-                        supabaseKey.includes('your-anon-key');
+                        supabaseKey.includes('your-role-key');
 
   if (isPlaceholder) {
     console.warn('[Waffle Wala] Using Phase 1 static fallback data (Supabase credentials not configured in .env.local)');
@@ -27,7 +27,7 @@ async function getMenuData() {
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = await createServiceClient();
     
     const { data: products, error } = await supabase
       .from('products')

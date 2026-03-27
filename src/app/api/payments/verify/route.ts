@@ -1,79 +1,118 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
+import { createServiceClient } from '@/lib/supabase/server';
 import { verifyRazorpaySignature } from '@/lib/razorpay';
-import { logAudit } from '@/lib/audit';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, internal_order_id } = body;
+    const supabase = await createServiceClient();
+    const payload = await request.json();
 
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !internal_order_id) {
-      return NextResponse.json({ error: 'Missing required payment parameters' }, { status: 400 });
+    const { 
+      razorpay_order_id, 
+      razorpay_payment_id, 
+      razorpay_signature,
+      local_order_id,
+    } = payload;
+
+    // 1. Basic Validation
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !local_order_id) {
+      return NextResponse.json(
+        { error: 'Missing required verification fields' },
+        { status: 400 }
+      );
     }
 
-    const isValid = verifyRazorpaySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
+    // 2. Fetch the existing payment/order record for verification (Idempotency Check)
+    const { data: existingPayment, error: fetchError } = await supabase
+      .from('payments')
+      .select('status, id, order_id')
+      .eq('order_id', local_order_id)
+      .eq('razorpay_order_id', razorpay_order_id)
+      .single();
 
-    const supabase = await createClient();
+    if (fetchError || !existingPayment) {
+      console.error('Payment record not found for verification:', fetchError);
+      return NextResponse.json({ error: 'Payment record not found' }, { status: 404 });
+    }
+
+    // IDEMPOTENCY: If already paid, return safe success
+    if (existingPayment.status === 'paid') {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Payment already verified',
+        order_id: existingPayment.order_id 
+      });
+    }
+
+    // 3. Signature Verification (Server-Side Only)
+    const isValid = verifyRazorpaySignature(
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature
+    );
 
     if (!isValid) {
-      // Log payment failure
+      console.error('Invalid Razorpay signature for order:', local_order_id);
+      
+      // Update payment record to 'failed'
       await supabase
         .from('payments')
-        .update({ status: 'failed', provider_payment_id: razorpay_payment_id })
-        .eq('provider_order_id', razorpay_order_id);
-      
-      await supabase
-        .from('orders')
-        .update({ payment_status: 'failed' })
-        .eq('id', internal_order_id);
-        
+        .update({ 
+            status: 'failed', 
+            failure_reason: 'Invalid signature',
+            razorpay_payment_id 
+        })
+        .eq('id', existingPayment.id);
+
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 });
     }
 
-    // Success — Update Payment
-    await supabase
+    // 4. ATOMIC UPDATE (Idempotent): Update Payment and Order
+    // Update Payment
+    const { error: paymentUpdateError } = await supabase
       .from('payments')
-      .update({ 
-        status: 'completed', 
-        provider_payment_id: razorpay_payment_id 
+      .update({
+        status: 'paid',
+        razorpay_payment_id,
+        razorpay_signature,
+        paid_at: new Date().toISOString(),
       })
-      .eq('provider_order_id', razorpay_order_id);
+      .eq('id', existingPayment.id);
 
-    // Success — Update Order
-    // The DB trigger `tr_orders_lifecycle` will automatically set `confirmed_at` when order_status changes to 'confirmed'
-    const { data: order, error: orderError } = await supabase
+    if (paymentUpdateError) {
+      console.error('Error updating payment status:', paymentUpdateError);
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Payment verified but failed to update status', 
+        suggestion: `Database error: ${paymentUpdateError.message}` 
+      }, { status: 500 });
+    }
+
+    // Update Order
+    const { error: orderUpdateError } = await supabase
       .from('orders')
-      .update({ 
-        payment_status: 'paid',
-        order_status: 'confirmed'
-      })
-      .eq('id', internal_order_id)
-      .select('order_number, customer_id')
-      .single();
+      .update({ status: 'confirmed' })
+      .eq('id', local_order_id);
 
-    if (orderError) throw orderError;
-
-    // Log Audit (System action)
-    await logAudit({
-      actor_role: 'system',
-      action_type: 'update',
-      entity_type: 'order_status',
-      entity_id: internal_order_id,
-      new_value: { payment_status: 'paid', order_status: 'confirmed', provider_payment_id: razorpay_payment_id },
-      ip_address: request.headers.get('x-forwarded-for') || 'unknown'
-    });
+    if (orderUpdateError) {
+      console.error('Error updating order status:', orderUpdateError);
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Failed to confirm order status', 
+        suggestion: `Database error: ${orderUpdateError.message}` 
+      }, { status: 500 });
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Payment verified successfully',
-      order_number: order?.order_number
+      message: 'Payment verified and order confirmed',
+      order_id: local_order_id
     });
 
   } catch (error: any) {
-    console.error('Payment Verification Error:', error);
+    console.error('Unhandled error in /api/payments/verify:', error);
     return NextResponse.json(
-      { error: error.message || 'Payment verification failed' },
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     );
   }
