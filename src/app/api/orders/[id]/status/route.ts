@@ -2,15 +2,16 @@ import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { OrderStatus } from '@/types';
 
-const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   pending: ['confirmed', 'cancelled'],
   confirmed: ['preparing', 'cancelled'],
   preparing: ['ready', 'cancelled'],
-  ready: ['out_for_delivery'],
-  out_for_delivery: ['delivered'],
-  delivered: [], // Terminal
-  cancelled: [], // Terminal
-  refunded: [],  // Terminal
+  ready: ['out_for_delivery', 'delivered'],
+  out_for_delivery: ['delivered', 'failed'],
+  delivered: [],
+  cancelled: [],
+  refunded: [],
+  failed: [],
 };
 
 /**
@@ -26,8 +27,24 @@ export async function PATCH(
     const body = await request.json();
     const { newStatus } = body as { newStatus: OrderStatus };
 
-    if (!newStatus || !ALLOWED_TRANSITIONS[newStatus]) {
+    if (!newStatus) {
+      return NextResponse.json({ error: 'New status is required' }, { status: 400 });
+    }
+
+    const { getAdminRole } = await import('@/lib/adminAuth');
+    const role = await getAdminRole();
+
+    if (!role) {
+      return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 401 });
+    }
+
+    if (!VALID_TRANSITIONS[newStatus]) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    }
+
+    // Optional: Restrict cancellations to owners/managers if desired
+    if (newStatus === 'cancelled' && !['owner', 'manager'].includes(role)) {
+       return NextResponse.json({ error: 'Forbidden. Only managers can cancel orders.' }, { status: 403 });
     }
 
     const supabase = await createServiceClient();
@@ -46,7 +63,7 @@ export async function PATCH(
     const currentStatus = order.status as OrderStatus;
 
     // 2. Validate Transition
-    const allowed = ALLOWED_TRANSITIONS[currentStatus];
+    const allowed = VALID_TRANSITIONS[currentStatus];
     if (!allowed.includes(newStatus)) {
       return NextResponse.json(
         { error: `Invalid transition: ${currentStatus} -> ${newStatus}` },

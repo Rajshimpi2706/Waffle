@@ -4,7 +4,7 @@ import { ProductsClient } from './ProductsClient';
 import { redirect } from 'next/navigation';
 
 export const metadata = {
-  title: 'Products Management | Waffle House Admin',
+  title: 'Menu Management | Waffle Wala Admin',
 };
 
 export default async function AdminProductsPage() {
@@ -25,37 +25,36 @@ export default async function AdminProductsPage() {
     redirect('/admin?reason=unauthorized-products');
   }
 
-  // Pre-fetch products and categories
-  const [productsRes, categoriesRes, toppingsRes] = await Promise.all([
-    supabase
-      .from('products')
-      .select('*, category:categories(name)')
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('categories')
-      .select('*')
-      .order('sort_order', { ascending: true }),
-    supabase
-      .from('toppings_addons')
-      .select('*')
-      .order('name', { ascending: true })
-  ]);
+  // Fetch products with category names
+  const { data: products } = await supabase
+    .from('products')
+    .select(`
+      *,
+      category:categories(name)
+    `)
+    .order('sort_order', { ascending: true });
+
+  // Fetch categories for the Add/Edit form
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="max-w-7xl mx-auto text-gray-900">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Products & Inventory</h1>
-          <p className="text-gray-500">Manage your menu offerings, prices, and stock levels.</p>
+          <h1 className="text-2xl font-bold tracking-tight">Menu Management</h1>
+          <p className="text-gray-500 text-sm mt-1">Add, edit, or remove products from your digital menu.</p>
         </div>
       </div>
 
-      <Suspense fallback={<div className="h-96 flex items-center justify-center animate-pulse bg-white rounded-2xl">Loading products...</div>}>
+      <Suspense fallback={<div className="h-96 flex items-center justify-center animate-pulse bg-white rounded-2xl border border-gray-100">Loading menu inventory...</div>}>
          <ProductsClient 
-            initialProducts={productsRes.data || []} 
-            categories={categoriesRes.data || []}
-            toppings={toppingsRes.data || []}
-            adminRole={adminUser.role} 
+           initialProducts={products || []} 
+           categories={categories || []}
+           adminRole={adminUser.role} 
          />
       </Suspense>
     </div>

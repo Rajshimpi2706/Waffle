@@ -4,15 +4,17 @@
 
 export type AdminRole = 'owner' | 'manager' | 'staff';
 export type OrderType = 'delivery' | 'takeaway' | 'dine_in';
-export type OrderStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'preparing'
-  | 'ready'
-  | 'out_for_delivery'
-  | 'delivered'
+export type OrderStatus = 
+  | 'pending' 
+  | 'confirmed' 
+  | 'preparing' 
+  | 'ready' 
+  | 'out_for_delivery' 
+  | 'delivered' 
   | 'cancelled'
-  | 'refunded';
+  | 'refunded'
+  | 'failed';
+
 export type DiscountType = 'fixed' | 'percentage';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 

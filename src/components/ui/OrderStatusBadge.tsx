@@ -13,9 +13,10 @@ const STATUS_MAP: Record<OrderStatus, { label: string; color: string }> = {
   preparing: { label: 'Preparing your order', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
   ready: { label: 'Ready for pickup / dispatch', color: 'bg-purple-100 text-purple-700 border-purple-200' },
   out_for_delivery: { label: 'On the way', color: 'bg-orange-100 text-orange-700 border-orange-200' },
-  delivered: { label: 'Delivered successfully', color: 'bg-green-100 text-green-700 border-green-200' },
-  cancelled: { label: 'Order cancelled', color: 'bg-red-100 text-red-700 border-red-200' },
-  refunded: { label: 'Refunded', color: 'bg-gray-100 text-gray-700 border-gray-200' },
+  delivered: { label: 'Delivered', color: 'bg-green-100 text-green-800 border-green-200' },
+  cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800 border-red-200' },
+  refunded: { label: 'Refunded', color: 'bg-purple-100 text-purple-800 border-purple-200' },
+  failed: { label: 'Failed', color: 'bg-gray-100 text-gray-800 border-gray-200' },
 };
 
 export function OrderStatusBadge({ status, className }: OrderStatusBadgeProps) {

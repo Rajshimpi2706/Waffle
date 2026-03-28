@@ -33,18 +33,12 @@ export default async function AdminOrdersPage() {
     .from('orders')
     .select(`
       *,
-      customer:customers(full_name, phone),
-      shipping_address:addresses(*),
+      customer:customers(full_name),
       order_items(
-        quantity,
-        total_price,
-        product:products(name),
-        order_item_toppings(
-          quantity,
-          unit_price,
-          topping:toppings_addons(name)
-        )
-      )
+        *,
+        product:products(name)
+      ),
+      payment:payments(status)
     `)
     .gte('created_at', today.toISOString())
     .order('created_at', { ascending: false });

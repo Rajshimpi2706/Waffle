@@ -1,8 +1,17 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
 
+/**
+ * Next.js 16 Proxy (formerly Middleware) logic.
+ * Lightweight route protection and redirection.
+ */
 export async function proxy(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,70 +25,56 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
-          supabaseResponse = NextResponse.next({ request });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            response.cookies.set(name, value, options)
           );
         },
       },
     }
   );
 
-  // Refresh session — MUST NOT have any logic between this and returning
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const path = request.nextUrl.pathname;
+  // Admin Route Protection
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    // 1. Skip protection for login page to avoid redirect loops
+    if (request.nextUrl.pathname === '/admin/login' || request.nextUrl.pathname === '/admin/login/forgot-password') {
+      return response;
+    }
 
-  // ---- Admin route protection ----
-  if (path.startsWith('/admin') && path !== '/admin/login') {
+    // 2. Redirect to login if unauthenticated
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = '/admin/login';
-      url.searchParams.set('reason', 'session_expired');
+      url.searchParams.set('returnTo', request.nextUrl.pathname);
       return NextResponse.redirect(url);
     }
 
-    // Verify admin role from DB
-    const { data: adminUser } = await supabase
-      .from('admin_users')
-      .select('role, is_active')
-      .eq('auth_user_id', user.id)
-      .single();
-
-    if (!adminUser || !adminUser.is_active) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/admin/login';
-      url.searchParams.set('reason', 'unauthorized');
-      return NextResponse.redirect(url);
-    }
+    // 3. Optional: Role check could happen here, but better done in Server Components/APIs
+    // to keep proxy logic extremely lightweight as per requirements.
   }
 
-  // ---- Customer account route protection ----
-  if (path.startsWith('/account')) {
+  // API protection for /api/admin
+  if (request.nextUrl.pathname.startsWith('/api/admin')) {
     if (!user) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/login';
-      url.searchParams.set('reason', 'session_expired');
-      url.searchParams.set('redirect', path);
-      return NextResponse.redirect(url);
+      return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 401 });
     }
   }
 
-  // ---- Redirect logged-in users away from auth pages ----
-  if (user && (path === '/login' || path === '/signup')) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
-  return supabaseResponse;
+  return response;
 }
 
+// Config to match only relevant routes
 export const config = {
   matcher: [
     '/admin/:path*',
-    '/account/:path*',
-    '/login',
-    '/signup',
+    '/api/admin/:path*',
   ],
 };

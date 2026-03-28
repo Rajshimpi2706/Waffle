@@ -1,136 +1,88 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { logAudit } from '@/lib/audit';
+import { createServiceClient } from '@/lib/supabase/server';
+import { getAdminRole } from '@/lib/adminAuth';
 
-async function checkAdmin(supabase: any) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { user: null, adminUser: null };
+/**
+ * Admin Product CRUD API
+ * Supports: GET (List), POST (Create)
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const role = await getAdminRole();
+    if (!role) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { data: adminUser } = await supabase
-    .from('admin_users')
-    .select('id, role')
-    .eq('auth_user_id', user.id)
-    .single();
+    const supabase = await createServiceClient();
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        category:categories(name)
+      `)
+      .order('sort_order', { ascending: true });
 
-  return { user, adminUser };
+    if (error) throw error;
+    return NextResponse.json({ success: true, products: data });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { adminUser } = await checkAdmin(supabase);
-
-    if (!adminUser || !['owner', 'manager'].includes(adminUser.role)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const role = await getAdminRole();
+    if (!role) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!['owner', 'manager'].includes(role)) {
+      return NextResponse.json({ error: 'Forbidden. Role cannot create products.' }, { status: 403 });
     }
 
     const body = await request.json();
-    
-    // Create new product
-    const { data: newProduct, error } = await supabase
-      .from('products')
-      .insert(body)
-      .select('*, category:categories(name)')
-      .single();
+    const { name, slug, description, price, category_id, image_url, is_available } = body;
 
-    if (error) throw error;
-
-    await logAudit({
-      actor_user_id: adminUser.id,
-      actor_role: adminUser.role,
-      action_type: 'create',
-      entity_type: 'product',
-      entity_id: newProduct.id,
-      new_value: body,
-      ip_address: request.headers.get('x-forwarded-for') || 'unknown'
-    });
-
-    return NextResponse.json({ success: true, product: newProduct });
-  } catch (err: any) {
-    console.error('Create Product Error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
-}
-
-export async function PATCH(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    const { adminUser } = await checkAdmin(supabase);
-
-    if (!adminUser || !['owner', 'manager'].includes(adminUser.role)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    // Strict Server-side Validation
+    if (!name || !slug || price === undefined || !category_id) {
+      return NextResponse.json({ error: 'Missing required fields (name, slug, price, category)' }, { status: 400 });
     }
 
-    const body = await request.json();
-    const { id, ...updates } = body;
-
-    const { data: oldProduct } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    const { data: updatedProduct, error } = await supabase
-      .from('products')
-      .update(updates)
-      .eq('id', id)
-      .select('*, category:categories(name)')
-      .single();
-
-    if (error) throw error;
-
-    await logAudit({
-      actor_user_id: adminUser.id,
-      actor_role: adminUser.role,
-      action_type: 'update',
-      entity_type: 'product',
-      entity_id: id,
-      previous_value: oldProduct,
-      new_value: updates,
-      ip_address: request.headers.get('x-forwarded-for') || 'unknown'
-    });
-
-    return NextResponse.json({ success: true, product: updatedProduct });
-  } catch (err: any) {
-    console.error('Update Product Error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
-}
-
-export async function DELETE(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    const { adminUser } = await checkAdmin(supabase);
-
-    // Only 'owner' can delete officially via this API
-    if (!adminUser || adminUser.role !== 'owner') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (typeof price !== 'number' || price <= 0) {
+      return NextResponse.json({ error: 'Invalid price. Must be a positive number.' }, { status: 400 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    if (!/^[a-z0-9-]+$/.test(slug)) {
+      return NextResponse.json({ error: 'Invalid slug format. Use lowercase and hyphens.' }, { status: 400 });
+    }
 
-    if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
+    const supabase = await createServiceClient();
 
-    const { error } = await supabase
+    // Verify category exists
+    const { data: catCheck } = await supabase.from('categories').select('id').eq('id', category_id).single();
+    if (!catCheck) {
+      return NextResponse.json({ error: 'Invalid category_id provided.' }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
       .from('products')
-      .delete()
-      .eq('id', id);
+      .insert({
+        name,
+        slug,
+        description,
+        price,
+        category_id,
+        image_url: image_url || '/images/products/placeholder.png',
+        is_available: is_available !== undefined ? is_available : true,
+      })
+      .select()
+      .single();
 
-    if (error) throw error;
+    if (error) {
+      if (error.code === '23505') {
+        return NextResponse.json({ error: 'Product slug already exists. Use a unique name.' }, { status: 409 });
+      }
+      throw error;
+    }
 
-    await logAudit({
-      actor_user_id: adminUser.id,
-      actor_role: adminUser.role,
-      action_type: 'delete',
-      entity_type: 'product',
-      entity_id: id,
-      ip_address: request.headers.get('x-forwarded-for') || 'unknown'
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (err: any) {
-    console.error('Delete Product Error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ success: true, product: data }, { status: 201 });
+  } catch (error: any) {
+    console.error('[Admin Product POST] Error:', error);
+    return NextResponse.json({ error: 'Failed to create product', details: error.message }, { status: 500 });
   }
 }

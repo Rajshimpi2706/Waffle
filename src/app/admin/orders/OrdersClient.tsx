@@ -31,15 +31,12 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'orders' },
         (payload) => {
-          // Quick merge strategy for active session (refreshing fully handles complex joins for now pending deep real-time hydration)
-          // For simplicity in UI logic while real-time fires, we'll auto-refresh the list if visible active orders change,
-          // OR we just mutate the specific row's status locally if it's an update.
           if (payload.eventType === 'UPDATE') {
              setOrders(prev => prev.map(o => o.id === payload.new.id ? { ...o, ...payload.new } : o));
-             toast.info(`Order ${payload.new.order_number} status changed to ${payload.new.order_status}`);
+             toast.info(`Order ${payload.new.order_number} status changed to ${payload.new.status}`);
           } else if (payload.eventType === 'INSERT') {
-             toast.success(`New Order received: WAFFLE...`);
-             // We won't auto-fetch full join right now to save bandwidth natively, they can hit refresh.
+             toast.success(`New Order received: ${payload.new.order_number}`);
+             // We could fetch the full object here, but a manual refresh is safer for complex joins
           }
         }
       )
@@ -52,10 +49,11 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      const res = await fetch(`/api/admin/orders/${orderId}`, {
+      // Use the unified/secure status update endpoint from Phase 4
+      const res = await fetch(`/api/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order_status: newStatus })
+        body: JSON.stringify({ newStatus })
       });
 
       if (!res.ok) {
@@ -64,7 +62,6 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
       }
 
       toast.success('Order status updated');
-      // local state update is handled by the real-time listener above!
     } catch (err: any) {
       toast.error(err.message);
     }
@@ -72,7 +69,6 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
 
   // Filter logic
   const filteredOrders = orders.filter(order => {
-    // 1. Search (Order Number, Customer Fullname)
     const q = searchQuery.toLowerCase();
     const matchesSearch = 
       order.order_number.toLowerCase().includes(q) || 
@@ -81,12 +77,11 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
 
     if (!matchesSearch) return false;
 
-    // 2. Status Group
     if (statusFilter === 'active') {
-      return ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery'].includes(order.order_status);
+      return ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery'].includes(order.status);
     }
-    if (statusFilter === 'completed') return order.order_status === 'delivered';
-    if (statusFilter === 'cancelled') return ['cancelled', 'refunded'].includes(order.order_status);
+    if (statusFilter === 'completed') return order.status === 'delivered';
+    if (statusFilter === 'cancelled') return ['cancelled', 'failed', 'refunded'].includes(order.status);
     
     return true; // 'all'
   });
@@ -95,15 +90,15 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
     switch(status) {
       case 'delivered': return 'success';
       case 'cancelled': 
-      case 'refunded': return 'destructive';
+      case 'failed': return 'destructive';
+      case 'refunded': return 'secondary';
       case 'out_for_delivery': return 'default';
-      case 'completed': return 'success';
       default: return 'gold';
     }
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-fade-in">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-fade-in text-gray-900">
       
       {/* Controls */}
       <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row gap-4 justify-between items-center">
@@ -112,7 +107,7 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
              <Input 
                placeholder="Search orders..." 
-               className="pl-10"
+               className="pl-10 h-10"
                value={searchQuery}
                onChange={(e) => setSearchQuery(e.target.value)}
              />
@@ -120,7 +115,7 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
           <Select 
             value={statusFilter} 
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-32"
+            className="w-32 h-10"
           >
             <option value="active">Active</option>
             <option value="completed">Completed</option>
@@ -136,7 +131,7 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
 
       {/* Table */}
       <div className="overflow-x-auto min-h-[400px]">
-        <table className="w-full text-sm text-left align-middle">
+        <table className="w-full text-sm text-left align-middle font-sans">
           <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-6 py-4 font-medium">Order & Time</th>
@@ -149,8 +144,8 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
           <tbody className="divide-y divide-gray-100">
             {filteredOrders.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                  <div className="flex flex-col items-center gap-2 text-gray-400">
+                <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
+                  <div className="flex flex-col items-center gap-2">
                      <AlertCircle size={32} />
                      <p>No orders found matching your filters.</p>
                   </div>
@@ -171,7 +166,7 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
                     <p className="font-medium text-gray-900">
                       {order.shipping_address?.full_name || order.customer?.full_name || 'Guest'}
                     </p>
-                    <Badge variant="secondary" className="mt-1 text-[10px] uppercase">
+                    <Badge variant="secondary" className="mt-1 text-[10px] uppercase font-bold tracking-tight">
                       {order.order_type}
                     </Badge>
                   </td>
@@ -181,7 +176,7 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
                     <div className="max-w-[200px]">
                       {order.order_items?.map((item: any, idx: number) => (
                         <p key={idx} className="truncate text-gray-700 text-xs">
-                           <span className="font-semibold">{item.quantity}x</span> {item.product.name}
+                           <span className="font-semibold">{item.quantity}x</span> {item.product?.name || item.product_name}
                         </p>
                       ))}
                     </div>
@@ -190,36 +185,37 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
                   {/* Financials */}
                   <td className="px-6 py-4">
                     <p className="font-semibold text-gray-900">{formatCurrency(order.total_amount)}</p>
-                    <Badge variant={order.payment_status === 'paid' ? 'success' : order.payment_status === 'failed' ? 'destructive' : 'secondary' as any} className="mt-1 uppercase text-[10px]">
-                      {order.payment_status}
+                    <Badge variant={order.payment?.[0]?.status === 'paid' ? 'success' : order.payment?.[0]?.status === 'failed' ? 'destructive' : 'secondary' as any} className="mt-1 uppercase text-[10px] font-bold">
+                      {order.payment?.[0]?.status || 'pending'}
                     </Badge>
                   </td>
 
                   {/* Actions / Status Picker */}
                   <td className="px-6 py-4">
-                    {order.payment_status === 'paid' && !['delivered', 'cancelled', 'refunded'].includes(order.order_status) ? (
+                    {!['delivered', 'cancelled', 'failed', 'refunded'].includes(order.status) ? (
                       <Select 
-                        value={order.order_status}
+                        value={order.status}
                         onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                        className={`text-xs font-semibold uppercase ${
-                          order.order_status === 'pending' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' :
-                          order.order_status === 'preparing' ? 'bg-orange-50 text-orange-800 border-orange-200' :
-                          order.order_status === 'ready' ? 'bg-blue-50 text-blue-800 border-blue-200' :
-                          order.order_status === 'out_for_delivery' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' : ''
+                        className={`text-xs font-bold uppercase ${
+                          order.status === 'pending' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' :
+                          order.status === 'preparing' ? 'bg-orange-50 text-orange-800 border-orange-200' :
+                          order.status === 'ready' ? 'bg-purple-50 text-purple-800 border-purple-200' :
+                          order.status === 'out_for_delivery' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' : ''
                         }`}
                       >
-                         {/* We enforce flow manually by providing options based on current logic */}
-                         {order.order_status === 'pending' && <option value="pending">Pending</option>}
-                         {(order.order_status === 'pending' || order.order_status === 'confirmed') && <option value="confirmed">Confirm</option>}
-                         <option value="preparing">Preparing</option>
-                         <option value="ready">Ready for Pickup</option>
+                         {/* We enforce flow manually by providing options based on Phase 4 logic */}
+                         {order.status === 'pending' && <option value="pending">Pending</option>}
+                         {(order.status === 'pending') && <option value="confirmed">Confirm Order</option>}
+                         {(order.status === 'pending' || order.status === 'confirmed') && <option value="preparing">Start Preparing</option>}
+                         <option value="ready">Mark as Ready</option>
                          {order.order_type === 'delivery' && <option value="out_for_delivery">Out for Delivery</option>}
-                         <option value="delivered">Delivered</option>
+                         <option value="delivered">Mark Delivered</option>
                          {adminRole !== 'staff' && <option value="cancelled">Cancel Order</option>}
+                         {adminRole === 'owner' && <option value="failed">Mark Failed</option>}
                       </Select>
                     ) : (
-                       <Badge variant={getStatusBadgeVariant(order.order_status) as any} className="capitalize">
-                         {order.order_status.replace(/_/g, ' ')}
+                       <Badge variant={getStatusBadgeVariant(order.status) as any} className="capitalize font-bold">
+                         {order.status.replace(/_/g, ' ')}
                        </Badge>
                     )}
                   </td>

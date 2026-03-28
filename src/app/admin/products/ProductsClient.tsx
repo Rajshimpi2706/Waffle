@@ -1,259 +1,340 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Search, Edit2, Trash2, ShieldAlert, Archive } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
-import { toast } from 'sonner';
+import React, { useState, useEffect, Suspense } from 'react';
+import { 
+  Plus, 
+  Search, 
+  Edit3, 
+  Trash2, 
+  MoreVertical, 
+  Filter,
+  Check,
+  X,
+  AlertCircle,
+  RefreshCw,
+  Image as ImageIcon
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
-import { ProductForm } from '@/app/admin/products/ProductForm';
+import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/utils';
+import { Category, Product, AdminRole } from '@/types';
 import { createClient } from '@/lib/supabase/client';
-import type { Product, Category, ToppingAddon, AdminRole } from '@/types';
 
 interface ProductsClientProps {
-  initialProducts: Product[];
-  categories: Category[];
-  toppings: ToppingAddon[];
+  initialProducts: any[];
+  categories: any[];
   adminRole: AdminRole;
 }
 
-export function ProductsClient({ initialProducts, categories, toppings, adminRole }: ProductsClientProps) {
+export function ProductsClient({ initialProducts, categories, adminRole }: ProductsClientProps) {
+  // State
   const [products, setProducts] = useState(initialProducts);
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
 
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<any>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  // Form State
+  const [formData, setFormData] = useState({
+    name: '',
+    slug: '',
+    price: 0,
+    category_id: '',
+    description: '',
+    image_url: '',
+    is_available: true
+  });
 
-  const filteredProducts = products.filter((p: any) => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (p.category?.name?.toLowerCase() || '').includes(searchQuery.toLowerCase())
-  );
-
-  const handleOpenCreate = () => {
-    setSelectedProduct(null);
-    setIsFormOpen(true);
+  const resetForm = () => {
+    setFormData({ 
+      name: '', 
+      slug: '', 
+      price: 0, 
+      category_id: categories[0]?.id || '', 
+      description: '', 
+      image_url: '', 
+      is_available: true 
+    });
+    setEditingProduct(null);
   };
 
-  const handleOpenEdit = (product: any) => {
-    setSelectedProduct(product);
-    setIsFormOpen(true);
-  };
-
-  const handleOpenDelete = (product: any) => {
-    setProductToDelete(product);
-    setIsDeleteOpen(true);
+  const handleEdit = (product: any) => {
+    setEditingProduct(product);
+    setFormData({
+      name: product.name,
+      slug: product.slug,
+      price: product.price,
+      category_id: product.category_id || '',
+      description: product.description || '',
+      image_url: product.image_url || '',
+      is_available: product.is_available
+    });
+    setIsModalOpen(true);
   };
 
   const handleToggleAvailability = async (product: any) => {
     try {
-      const supabase = createClient();
       const newStatus = !product.is_available;
-      
-      const { error } = await supabase
-        .from('products')
-        .update({ is_available: newStatus })
-        .eq('id', product.id);
-
-      if (error) throw error;
-      
-      setProducts((prev: any) => prev.map((p: any) => p.id === product.id ? { ...p, is_available: newStatus } : p));
-      toast.success(`${product.name} marked as ${newStatus ? 'available' : 'unavailable'}`);
-
-      // Optional: Hit a small local API endpoint to add an audit log for this quick toggle
-      fetch('/api/admin/audit', {
-        method: 'POST',
+      const res = await fetch(`/api/admin/products/${product.id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action_type: 'update',
-          entity_type: 'product_availability',
-          entity_id: product.id,
-          new_value: { is_available: newStatus }
-        })
+        body: JSON.stringify({ is_available: newStatus })
       });
-
-    } catch (err: any) {
-      toast.error('Failed to update availability');
-    }
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!productToDelete) return;
-    setIsDeleting(true);
-    try {
-      const res = await fetch(`/api/admin/products?id=${productToDelete.id}`, {
-        method: 'DELETE',
-      });
-      if (!res.ok) throw new Error('Failed to delete product');
+      if (!res.ok) throw new Error('Failed to update availability');
       
-      setProducts((prev: any) => prev.filter((p: any) => p.id !== productToDelete.id));
-      setIsDeleteOpen(false);
-      setProductToDelete(null);
-      toast.success('Product deleted successfully');
+      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, is_available: newStatus } : p));
+      toast.success(`${product.name} is now ${newStatus ? 'on' : 'off'} the menu`);
     } catch (err: any) {
-      toast.error(err.message || 'Error deleting product');
-    } finally {
-      setIsDeleting(false);
+      toast.error(err.message);
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const url = editingProduct ? `/api/admin/products/${editingProduct.id}` : '/api/admin/products';
+    const method = editingProduct ? 'PATCH' : 'POST';
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save product');
+
+      if (editingProduct) {
+        setProducts(prev => prev.map(p => p.id === data.product.id ? { ...p, ...data.product, category: categories.find(c => c.id === data.product.category_id) } : p));
+        toast.success('Product updated successfully');
+      } else {
+        const newProduct = { ...data.product, category: categories.find(c => c.id === data.product.category_id) };
+        setProducts(prev => [newProduct, ...prev]);
+        toast.success('Product created successfully');
+      }
+      setIsModalOpen(false);
+      resetForm();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this product? Items with sales history will be archived instead.')) return;
+    try {
+      const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete');
+      
+      if (data.message && data.message.includes('archived')) {
+        toast.info(data.message);
+        // Refresh full list from server or update locally
+        setProducts(prev => prev.map(p => p.id === id ? { ...p, is_available: false, name: `[ARCHIVED] ${p.name}` } : p));
+      } else {
+        setProducts(prev => prev.filter(p => p.id !== id));
+        toast.success('Product removed from system');
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          p.slug.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === 'all' || p.category_id === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-fade-in">
+    <div className="space-y-6">
       
-      {/* Controls */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row gap-4 justify-between items-center">
-        <div className="relative w-full sm:w-80">
-           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-           <Input 
-             placeholder="Search products or categories..." 
-             className="pl-10"
-             value={searchQuery}
-             onChange={(e) => setSearchQuery(e.target.value)}
-           />
+      {/* Search & Actions Bar */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+        <div className="flex flex-1 gap-2 w-full">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Input 
+              placeholder="Search products..." 
+              className="pl-10 h-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Filter size={16} className="text-gray-400 hidden sm:block" />
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="h-10 px-3 rounded-xl border border-gray-200 bg-white text-sm outline-none focus:ring-1 focus:ring-[#C17839]"
+            >
+              <option value="all">All Categories</option>
+              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
         </div>
         
-        <Button onClick={handleOpenCreate} className="w-full sm:w-auto flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white">
-          <Plus size={16} /> Add Product
-        </Button>
+        {['owner', 'manager'].includes(adminRole) && (
+          <Button onClick={() => { resetForm(); setIsModalOpen(true); }} className="bg-[#C17839] hover:bg-[#A6662E] flex gap-2 h-10 text-white w-full sm:w-auto">
+            <Plus size={18} /> Add Product
+          </Button>
+        )}
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto min-h-[500px]">
-        <table className="w-full text-sm text-left align-middle">
-          <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-4 font-medium">Product</th>
-              <th className="px-6 py-4 font-medium">Category / Type</th>
-              <th className="px-6 py-4 font-medium text-right">Unit Price</th>
-              <th className="px-6 py-4 font-medium text-center">Status / Stock</th>
-              <th className="px-6 py-4 font-medium text-right w-32">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredProducts.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                  <Archive size={32} className="mx-auto text-gray-300 mb-3" />
-                  <p>No products found.</p>
-                </td>
-              </tr>
-            ) : (
-              filteredProducts.map((product: any) => (
-                <tr key={product.id} className="hover:bg-gray-50/50">
-                  
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      {product.image_url ? (
-                        <img src={product.image_url} alt={product.name} className="w-10 h-10 rounded-lg object-cover border border-gray-200" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 text-xs">No Img</div>
-                      )}
-                      <div>
-                        <p className="font-semibold text-gray-900">{product.name}</p>
-                        <p className="text-xs text-gray-500 truncate w-48" title={product.description}>{product.description}</p>
-                      </div>
-                    </div>
-                  </td>
+      {/* Product Grid */}
+      {filteredProducts.length === 0 ? (
+        <div className="bg-white p-12 rounded-2xl border border-gray-200 text-center text-gray-400">
+           <AlertCircle size={48} className="mx-auto mb-4 opacity-20" />
+           <p>No products found matching your search and category filters.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProducts.map(product => (
+            <div key={product.id} className={`bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md ${!product.is_available && 'opacity-60 bg-gray-50'}`}>
+              <div className="aspect-video relative bg-gray-100 overflow-hidden">
+                 {product.image_url ? (
+                   <img 
+                     src={product.image_url} 
+                     alt={product.name}
+                     className="w-full h-full object-cover"
+                   />
+                 ) : (
+                   <div className="w-full h-full flex items-center justify-center text-gray-300">
+                      <ImageIcon size={48} />
+                   </div>
+                 )}
+                 <div className="absolute top-3 right-3">
+                    <Badge variant={product.is_available ? 'success' : 'secondary'} className="uppercase text-[9px] font-bold tracking-wider">
+                      {product.is_available ? 'Active' : 'Hidden'}
+                    </Badge>
+                 </div>
+              </div>
+              
+              <div className="p-5 flex-1 flex flex-col">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1 min-w-0 pr-2">
+                     <h3 className="font-bold text-gray-900 truncate" title={product.name}>{product.name}</h3>
+                     <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
+                       {product.category?.name || categories.find(c => c.id === product.category_id)?.name || 'Uncategorized'}
+                     </span>
+                  </div>
+                  <p className="font-bold text-[#C17839] whitespace-nowrap">{formatCurrency(product.price)}</p>
+                </div>
+                
+                <p className="text-gray-500 text-xs line-clamp-2 mb-6 min-h-[32px]">
+                  {product.description || 'No description provided for this item.'}
+                </p>
 
-                  <td className="px-6 py-4">
-                    <p className="text-gray-900 font-medium">{product.category?.name || 'Uncategorized'}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                       {product.is_vegetarian ? (
-                         <span className="text-[10px] font-semibold text-green-700 bg-green-50 px-1.5 rounded border border-green-200 shrink-0">Veg</span>
-                       ) : (
-                         <span className="text-[10px] font-semibold text-red-700 bg-red-50 px-1.5 rounded border border-red-200 shrink-0">Non-Veg</span>
-                       )}
-                       {product.is_featured && <span className="text-[10px] font-semibold text-[#8B5E3C] bg-[#F5E6CC] px-2 rounded shrink-0">Featured</span>}
-                    </div>
-                  </td>
+                <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
+                   <button 
+                     onClick={() => handleToggleAvailability(product)}
+                     className={`text-[10px] font-bold uppercase tracking-tight transition-colors ${
+                        product.is_available ? 'text-gray-400 hover:text-red-500' : 'text-[#C17839] hover:text-[#A6662E]'
+                     }`}
+                   >
+                     {product.is_available ? 'Disable Item' : 'Enable Item'}
+                   </button>
 
-                  <td className="px-6 py-4 text-right font-medium text-gray-900">
-                    {formatCurrency(product.price)}
-                  </td>
+                   <div className="flex gap-2">
+                     <Button variant="outline" size="icon" onClick={() => handleEdit(product)} className="w-8 h-8 rounded-full border-gray-200">
+                       <Edit3 size={14} className="text-gray-600" />
+                     </Button>
+                     {adminRole === 'owner' && (
+                       <Button variant="outline" size="icon" onClick={() => handleDelete(product.id)} className="w-8 h-8 rounded-full border-gray-200 hover:bg-red-50 hover:border-red-100">
+                         <Trash2 size={14} className="text-red-500" />
+                       </Button>
+                     )}
+                   </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-                  <td className="px-6 py-4 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <button 
-                         onClick={() => handleToggleAvailability(product)}
-                         className={`px-3 py-1 text-xs font-semibold rounded-full w-24 transition-colors ${
-                           product.is_available 
-                             ? 'bg-green-100 text-green-800 hover:bg-green-200 border border-green-200' 
-                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
-                         }`}
-                      >
-                         {product.is_available ? 'Available' : 'Hidden'}
-                      </button>
-                      
-                      {(!product.is_available) && (
-                         <Badge variant="destructive" className="text-[10px] uppercase scale-90">Sold Out</Badge>
-                      )}
-                    </div>
-                  </td>
-
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                       <button 
-                         onClick={() => handleOpenEdit(product)}
-                         className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                         title="Edit Product"
-                       >
-                         <Edit2 size={16} />
-                       </button>
-                       {adminRole === 'owner' && (
-                         <button 
-                           onClick={() => handleOpenDelete(product)}
-                           className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                           title="Delete Product"
-                         >
-                           <Trash2 size={16} />
-                         </button>
-                       )}
-                    </div>
-                  </td>
-
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modals */}
-      <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title={selectedProduct ? "Edit Product" : "Add New Product"} size="xl">
-        <ProductForm 
-           product={selectedProduct} 
-           categories={categories}
-           toppings={toppings}
-           onSuccess={(savedProduct: Product) => {
-             setIsFormOpen(false);
-             if (selectedProduct) {
-               setProducts((prev) => prev.map((p) => p.id === savedProduct.id ? savedProduct : p));
-             } else {
-               setProducts((prev) => [savedProduct, ...prev]);
-             }
-           }} 
-        />
-      </Modal>
-
-      <Modal isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} title="Confirm Deletion">
-        <div className="pt-2">
-          <div className="bg-red-50 text-red-800 p-4 rounded-xl flex gap-3 mb-6 items-start">
-             <ShieldAlert className="flex-shrink-0 mt-0.5" size={20} />
-             <div>
-               <p className="font-semibold text-sm">Destructive Action</p>
-               <p className="text-xs mt-1">Are you sure you want to delete <strong>{productToDelete?.name}</strong>? This action cannot be undone and may affect historical order analytics if soft-deletes aren't implemented in the DB layer.</p>
+      {/* Add/Edit Modal */}
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        title={editingProduct ? 'Edit Product' : 'Add New Waffle'}
+        size="md"
+      >
+        <form onSubmit={handleSubmit} className="p-1 space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div className="space-y-1.5">
+               <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Product Name</label>
+               <Input 
+                 placeholder="e.g. Nutella Blast" 
+                 value={formData.name}
+                 onChange={e => setFormData({...formData, name: e.target.value})}
+                 required
+               />
+             </div>
+             <div className="space-y-1.5">
+               <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">URL Slug</label>
+               <Input 
+                 placeholder="e.g. nutella-blast" 
+                 value={formData.slug}
+                 onChange={e => setFormData({...formData, slug: e.target.value})}
+                 required
+               />
              </div>
           </div>
-          <div className="flex justify-end gap-3">
-             <Button variant="outline" onClick={() => setIsDeleteOpen(false)} disabled={isDeleting}>Cancel</Button>
-             <Button variant="danger" onClick={handleDeleteConfirm} loading={isDeleting}>Delete Product</Button>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div className="space-y-1.5">
+               <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Base Price (₹)</label>
+               <Input 
+                 type="number"
+                 placeholder="0" 
+                 value={formData.price}
+                 onChange={e => setFormData({...formData, price: Number(e.target.value)})}
+                 required
+               />
+             </div>
+             <div className="space-y-1.5">
+               <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Category</label>
+               <select 
+                 className="w-full h-10 px-3 rounded-xl border border-gray-200 bg-white text-sm outline-none focus:ring-1 focus:ring-[#C17839]"
+                 value={formData.category_id}
+                 onChange={e => setFormData({...formData, category_id: e.target.value})}
+                 required
+               >
+                 <option value="" disabled>Select a category</option>
+                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+               </select>
+             </div>
           </div>
-        </div>
+
+          <div className="space-y-1.5">
+             <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Description</label>
+             <textarea 
+               className="w-full rounded-xl border border-gray-200 p-3 text-sm focus:ring-1 focus:ring-[#C17839] outline-none min-h-[100px] resize-none"
+               placeholder="Briefly describe the product, ingredients, etc."
+               value={formData.description}
+               onChange={e => setFormData({...formData, description: e.target.value})}
+             />
+          </div>
+
+          <div className="space-y-1.5">
+             <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Image URL</label>
+             <Input 
+               placeholder="Paste image link here" 
+               value={formData.image_url}
+               onChange={e => setFormData({...formData, image_url: e.target.value})}
+             />
+             <p className="text-[10px] text-gray-400 italic">Recommendation: 1200x800px or 3:2 aspect ratio.</p>
+          </div>
+
+          <div className="pt-6 flex justify-end gap-3 border-t border-gray-100">
+             <Button variant="ghost" type="button" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+             <Button type="submit" className="bg-[#C17839] hover:bg-[#A6662E] text-white px-8">
+                {editingProduct ? 'Save Changes' : 'Create Product'}
+             </Button>
+          </div>
+        </form>
       </Modal>
 
     </div>

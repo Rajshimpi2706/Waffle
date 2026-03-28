@@ -33,10 +33,10 @@ export function DashboardClient() {
   }
 
   const stats = [
-    { label: "Today's Revenue", value: formatCurrency(data.stats.todayRevenue), icon: IndianRupee, color: 'text-green-600', bg: 'bg-green-100' },
+    { label: "Total Revenue", value: formatCurrency(data.stats.todayRevenue), icon: IndianRupee, color: 'text-green-600', bg: 'bg-green-100' },
     { label: "Today's Orders", value: data.stats.todayOrderCount, icon: ShoppingBag, color: 'text-blue-600', bg: 'bg-blue-100' },
-    { label: "Active Orders", value: data.stats.activeOrders, icon: Clock, color: 'text-[#C17839]', bg: 'bg-[#FDF6EC]' },
-    { label: "Total Customers", value: data.stats.totalCustomers, icon: Users, color: 'text-purple-600', bg: 'bg-purple-100' },
+    { label: "Pending Orders", value: data.stats.pendingOrders, icon: Clock, color: 'text-[#C17839]', bg: 'bg-[#FDF6EC]' },
+    { label: "Repeat Customers", value: data.stats.repeatCustomers, icon: Users, color: 'text-purple-600', bg: 'bg-purple-100' },
   ];
 
   return (
@@ -69,7 +69,7 @@ export function DashboardClient() {
       {/* Recent Orders Table */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mt-8">
         <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Active Orders Spotlight</h2>
+          <h2 className="text-lg font-semibold">Recent Activity</h2>
           <Link href="/admin/orders" className="text-sm text-[#C17839] hover:underline flex items-center gap-1 font-medium">
             View All <ArrowRight size={16} />
           </Link>
@@ -90,7 +90,7 @@ export function DashboardClient() {
             <tbody className="divide-y divide-gray-100">
               {data.recentOrders.length === 0 ? (
                 <tr>
-                   <td colSpan={6} className="px-6 py-8 text-center text-gray-500">No active orders right now.</td>
+                   <td colSpan={6} className="px-6 py-8 text-center text-gray-500">No recent orders found.</td>
                 </tr>
               ) : (
                 data.recentOrders.map((order: any) => (
@@ -105,8 +105,8 @@ export function DashboardClient() {
                        </Badge>
                     </td>
                     <td className="px-6 py-4">
-                       <Badge variant={order.order_status === 'pending' ? 'secondary' : 'gold' as any} className="capitalize text-[10px]">
-                         {order.order_status.replace(/_/g, ' ')}
+                       <Badge variant={order.status === 'pending' ? 'secondary' : 'gold' as any} className="capitalize text-[10px]">
+                         {order.status.replace(/_/g, ' ')}
                        </Badge>
                     </td>
                   </tr>
