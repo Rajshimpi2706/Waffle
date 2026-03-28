@@ -37,11 +37,17 @@ export function verifyRazorpaySignature(
   razorpayPaymentId: string,
   signature: string
 ): boolean {
-  const secret = process.env.RAZORPAY_KEY_SECRET!;
+  const secret = process.env.RAZORPAY_KEY_SECRET;
+  if (!secret) {
+    console.error('RAZORPAY_KEY_SECRET is missing during signature verification');
+    return false;
+  }
+
   const body = razorpayOrderId + '|' + razorpayPaymentId;
   const expectedSignature = crypto
     .createHmac('sha256', secret)
     .update(body)
     .digest('hex');
+    
   return expectedSignature === signature;
 }
