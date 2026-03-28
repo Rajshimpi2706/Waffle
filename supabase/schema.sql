@@ -180,7 +180,15 @@ CREATE TABLE orders (
     customer_phone TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
     subtotal NUMERIC(10,2) NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT now()
+    total_amount NUMERIC(10,2) NOT NULL DEFAULT 0,
+    confirmed_at TIMESTAMPTZ,
+    preparing_at TIMESTAMPTZ,
+    ready_at TIMESTAMPTZ,
+    out_for_delivery_at TIMESTAMPTZ,
+    delivered_at TIMESTAMPTZ,
+    cancelled_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- ============================================================

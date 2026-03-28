@@ -1,7 +1,8 @@
-import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { CheckCircle2, ShoppingBag, Calendar, Phone, User, ArrowRight } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { format } from 'date-fns';
 import Link from 'next/link';
 
 interface SuccessPageProps {
@@ -10,7 +11,7 @@ interface SuccessPageProps {
 
 export default async function SuccessPage({ params }: SuccessPageProps) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
 
   // Fetch order details with joined items and payment
   const { data: order, error } = await supabase
@@ -23,97 +24,108 @@ export default async function SuccessPage({ params }: SuccessPageProps) {
     return notFound();
   }
 
-  // Ensure payment is verified (paid) before celebrating
-  const isPaid = order.payment?.some((p: any) => p.status === 'paid') || order.status === 'confirmed';
+  // Ensure payment is verified (paid)
+  const isPaid = order.payment?.some((p: any) => p.status === 'paid') || order.status !== 'pending';
 
   return (
-    <div className="max-w-3xl mx-auto w-full px-4 py-12 lg:py-20 animate-fade-in">
-      <div className="bg-white rounded-[2.5rem] p-8 lg:p-12 shadow-sm border border-gray-100 text-center">
-        
-        <div className="w-20 h-20 bg-green-50 rounded-3xl flex items-center justify-center mx-auto mb-8 animate-bounce-subtle">
-          <CheckCircle2 className="text-green-500" size={40} />
-        </div>
+    <div className="bg-[#FDF6EC] min-h-screen py-12 lg:py-20 animate-fade-in">
+      <div className="max-w-3xl mx-auto w-full px-4">
+        <div className="bg-white rounded-[3rem] p-8 lg:p-16 shadow-xl shadow-[#C17839]/5 border border-white text-center relative overflow-hidden">
+          
+          {/* Confetti-like accent */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-2 bg-gradient-to-r from-transparent via-[#C17839] to-transparent"></div>
+          
+          <div className="w-24 h-24 bg-green-50 rounded-[2rem] flex items-center justify-center mx-auto mb-10 animate-bounce-subtle">
+            <CheckCircle2 className="text-green-500" size={48} />
+          </div>
 
-        <h1 className="text-3xl lg:text-4xl font-black text-gray-900 mb-4">
-          Payment Successful!
-        </h1>
-        <p className="text-gray-500 text-lg mb-10">
-          Thank you for your order. We've received your payment and our chefs are getting ready to bake your waffles.
-        </p>
+          <h1 className="text-4xl lg:text-5xl font-black text-gray-900 mb-6 tracking-tight">
+            Order Confirmed!
+          </h1>
+          <p className="text-gray-500 text-xl mb-12 max-w-lg mx-auto leading-relaxed">
+            Your payment was successful and we've started preparing your delicious waffles. Get ready for a treat!
+          </p>
 
-        <div className="bg-gray-50 rounded-3xl p-6 lg:p-8 text-left space-y-6 border border-gray-100 mb-10">
-          <div className="flex flex-col sm:flex-row justify-between gap-4 border-b border-gray-200 pb-6">
-            <div>
-              <p className="text-xs font-bold text-[#8B5E3C] uppercase tracking-widest mb-1">Order Number</p>
-              <p className="text-xl font-black text-gray-900">{order.order_number}</p>
+          <div className="bg-[#FDF6EC] rounded-[2.5rem] p-8 lg:p-10 text-left space-y-8 border border-[#F5E6CC] mb-12 shadow-inner">
+            <div className="flex flex-col sm:flex-row justify-between gap-6 border-b border-[#F5E6CC] pb-8">
+              <div>
+                <p className="text-xs font-black text-[#8B5E3C] uppercase tracking-[0.2em] mb-2">Order Number</p>
+                <p className="text-3xl font-black text-gray-900 tracking-tighter">{order.order_number}</p>
+              </div>
+              <div className="sm:text-right">
+                <p className="text-xs font-black text-[#8B5E3C] uppercase tracking-[0.2em] mb-2">Status</p>
+                <span className="inline-flex items-center px-4 py-2 rounded-2xl text-xs font-black bg-white text-green-700 border-2 border-green-100 shadow-sm">
+                   PAID & CONFIRMED
+                </span>
+              </div>
             </div>
-            <div className="sm:text-right">
-              <p className="text-xs font-bold text-[#8B5E3C] uppercase tracking-widest mb-1">Status</p>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
-                {isPaid ? 'Confirmed & Paid' : 'Pending Verification'}
-              </span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-gray-400 shadow-sm">
+                  <User size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer</p>
+                  <p className="font-bold text-gray-800 text-lg">{order.customer_name}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-gray-400 shadow-sm">
+                  <Phone size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone</p>
+                  <p className="font-bold text-gray-800 text-lg">{order.customer_phone}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-gray-400 shadow-sm">
+                  <Calendar size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Order Date</p>
+                  <p className="font-bold text-gray-800 text-lg">
+                    {format(new Date(order.created_at), 'dd MMM yyyy, p')}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-gray-400 shadow-sm">
+                  <ShoppingBag size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Items</p>
+                  <p className="font-bold text-gray-800 text-lg">{order.items?.length || 0} Delicious Waffles</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-8 border-t border-[#F5E6CC]">
+               <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] border-2 border-[#F5E6CC] shadow-sm">
+                 <span className="font-black text-gray-900 uppercase tracking-widest text-sm">Amount Paid</span>
+                 <span className="text-3xl font-black text-[#C17839]">{formatCurrency(order.total_amount)}</span>
+               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-            <div className="flex items-start gap-3">
-              <User size={18} className="text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase">Customer</p>
-                <p className="font-semibold text-gray-800">{order.customer_name}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Phone size={18} className="text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase">Phone</p>
-                <p className="font-semibold text-gray-800">{order.customer_phone}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Calendar size={18} className="text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase">Date</p>
-                <p className="font-semibold text-gray-800">
-                  {new Date(order.created_at).toLocaleDateString('en-IN', { 
-                    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-                  })}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <ShoppingBag size={18} className="text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase">Items</p>
-                <p className="font-semibold text-gray-800">{order.items?.length || 0} Items Ordered</p>
-              </div>
-            </div>
+          <div className="flex flex-col sm:flex-row gap-5 justify-center">
+             <Link 
+               href={`/order/${order.id}/track`} 
+               className="inline-flex items-center justify-center gap-3 px-10 h-18 bg-[#C17839] text-white font-black text-lg rounded-[1.5rem] hover:bg-[#A8662D] transition-all shadow-xl shadow-[#C17839]/20 hover:shadow-[#C17839]/30 active:scale-[0.97]"
+             >
+               Track Your Order
+               <ArrowRight size={24} />
+             </Link>
+             <Link 
+               href="/menu" 
+               className="inline-flex items-center justify-center gap-3 px-10 h-18 bg-white text-gray-800 font-bold text-lg rounded-[1.5rem] border-2 border-gray-100 hover:border-[#C17839] hover:text-[#C17839] transition-all active:scale-[0.97]"
+             >
+               Order More
+             </Link>
           </div>
 
-          <div className="pt-6 border-t border-gray-200">
-             <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100">
-               <span className="font-bold text-gray-900">Total Paid</span>
-               <span className="text-2xl font-black text-[#C17839]">{formatCurrency(order.subtotal)}</span>
-             </div>
-          </div>
         </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-           <Link 
-             href="/menu" 
-             className="inline-flex items-center justify-center gap-2 px-8 h-14 bg-[#C17839] text-white font-bold rounded-2xl hover:bg-[#A8662D] transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
-           >
-             Order More Waffles
-             <ArrowRight size={20} />
-           </Link>
-           <Link 
-             href="/" 
-             className="inline-flex items-center justify-center gap-2 px-8 h-14 bg-white text-gray-600 font-bold rounded-2xl border-2 border-gray-100 hover:border-[#C17839] hover:text-[#C17839] transition-all active:scale-[0.98]"
-           >
-             Go Home
-           </Link>
-        </div>
-
       </div>
     </div>
   );

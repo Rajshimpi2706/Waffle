@@ -148,32 +148,29 @@ export interface Coupon {
 export interface Order {
   id: string;
   order_number: string;
-  branch_id: string;
+  branch_id?: string;
   customer_id?: string;
   address_id?: string;
   order_type: OrderType;
   status: OrderStatus;
   subtotal: number;
-  tax_amount: number;
-  delivery_fee: number;
-  discount_amount: number;
   total_amount: number;
-  coupon_id?: string;
+  delivery_fee?: number;
+  discount_amount?: number;
   coupon_code?: string;
   special_instructions?: string;
-  estimated_delivery_minutes?: number;
   confirmed_at?: string;
   preparing_at?: string;
   ready_at?: string;
   out_for_delivery_at?: string;
   delivered_at?: string;
   cancelled_at?: string;
-  refunded_at?: string;
+  customer_name: string;
+  customer_phone: string;
   created_at: string;
   updated_at: string;
   // Joins
   customer?: Customer;
-  address?: Address;
   items?: OrderItem[];
   payment?: Payment;
 }
@@ -182,13 +179,10 @@ export interface OrderItem {
   id: string;
   order_id: string;
   product_id?: string;
-  variant_id?: string;
   product_name: string;
-  variant_name?: string;
   quantity: number;
-  unit_price: number;
-  total_price: number;
-  toppings?: OrderItemTopping[];
+  price: number;
+  line_total: number;
 }
 
 export interface OrderItemTopping {

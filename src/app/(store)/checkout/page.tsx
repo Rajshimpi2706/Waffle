@@ -106,6 +106,7 @@ export default function CheckoutPage() {
             const verifyData = await verifyRes.json();
             if (verifyRes.ok && verifyData.success) {
               clearCart();
+              // Redirect to the new Phase 4 success page
               router.push(`/order/${localOrderId}/success`);
             } else {
               throw new Error(verifyData.error || 'Verification failed');

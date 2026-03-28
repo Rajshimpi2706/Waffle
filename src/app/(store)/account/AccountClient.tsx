@@ -116,8 +116,8 @@ export function AccountClient({ user, customer, orders, addresses }: AccountClie
                       <div>
                         <div className="flex items-center gap-3 mb-1">
                           <span className="font-mono font-bold text-[#3B1F0A]">{order.order_number}</span>
-                          <Badge variant={getStatusColor(order.order_status) as any} className="capitalize">
-                            {order.order_status.replace(/_/g, ' ')}
+                          <Badge variant={getStatusColor(order.status) as any} className="capitalize">
+                            {order.status.replace(/_/g, ' ')}
                           </Badge>
                         </div>
                         <p className="text-sm text-[#8B5E3C]">{format(new Date(order.created_at), 'PPP at p')}</p>
@@ -133,12 +133,12 @@ export function AccountClient({ user, customer, orders, addresses }: AccountClie
                     </div>
 
                     <div className="flex items-center gap-3 pt-4 border-t border-[#F5E6CC]">
-                      {['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery'].includes(order.order_status) && (
-                        <Link href={`/track-order/${order.order_number}`}>
+                      {['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery'].includes(order.status) && (
+                        <Link href={`/order/${order.id}/track`}>
                           <Button variant="outline" size="sm">Track Order</Button>
                         </Link>
                       )}
-                      <Link href={`/order/success?order_number=${order.order_number}`}>
+                      <Link href={`/order/${order.id}/success`}>
                          <Button variant="ghost" size="sm" className="hidden sm:inline-flex">View Details</Button>
                       </Link>
                     </div>
