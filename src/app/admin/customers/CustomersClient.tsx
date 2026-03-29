@@ -47,75 +47,95 @@ export function CustomersClient({ initialCustomers }: { initialCustomers: any[] 
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-fade-in">
+    <div className="space-y-8 animate-fade-in text-[#3B1F0A] pb-20">
       
-      {/* Controls */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row gap-4 justify-between items-center">
-        <div className="relative w-full sm:w-80">
-           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+      {/* Premium Controls Architecture */}
+      <div className="bg-white rounded-[2.5rem] p-6 lg:p-8 shadow-soft border border-[#F5E6CC] flex flex-col sm:flex-row gap-6 justify-between items-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-[#C17839]/10" />
+        
+        <div className="relative w-full sm:w-96 group">
+           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C17839] group-focus-within:scale-110 transition-transform" size={18} />
            <Input 
-             placeholder="Search by name or phone..." 
-             className="pl-10"
+             placeholder="Search by name or connection string..." 
+             className="pl-12 h-14 bg-[#FDF6EC]/30 border-[#F5E6CC] rounded-2xl focus:shadow-premium transition-all font-bold"
              value={searchQuery}
              onChange={(e) => setSearchQuery(e.target.value)}
            />
         </div>
         
-        <Button onClick={handleExportCSV} variant="outline" className="w-full sm:w-auto flex items-center gap-2">
-          <Download size={16} /> Export CSV
+        <Button 
+          onClick={handleExportCSV} 
+          variant="outline" 
+          className="h-14 rounded-2xl border-[#F5E6CC] flex gap-3 px-8 text-[#3B1F0A] font-black uppercase tracking-widest text-[10px] hover:bg-[#FDF6EC] hover:shadow-soft transition-all active:scale-95 group w-full sm:w-auto"
+        >
+          <Download size={16} className="group-hover:-translate-y-1 transition-transform" /> 
+          Export Database
         </Button>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto min-h-[500px]">
-        <table className="w-full text-sm text-left align-middle">
-          <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-4 font-medium">Customer</th>
-              <th className="px-6 py-4 font-medium">Joined Date</th>
-              <th className="px-6 py-4 font-medium text-center">Total Orders</th>
-              <th className="px-6 py-4 font-medium text-right">Lifetime Spend</th>
-              <th className="px-6 py-4 font-medium text-right">Last Order</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredCustomers.length === 0 ? (
+      {/* Premium Table Architecture */}
+      <div className="bg-white rounded-[3rem] shadow-medium border border-[#F5E6CC] overflow-hidden relative">
+        <div className="overflow-x-auto min-h-[500px]">
+          <table className="w-full text-sm text-left align-middle">
+            <thead className="bg-[#FDF6EC]/50">
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                  <Users size={32} className="mx-auto text-gray-300 mb-3" />
-                  <p>No customers found.</p>
-                </td>
+                <th className="px-10 py-6 font-black text-[#A17C5F] uppercase tracking-widest text-[10px]">Customer Profile</th>
+                <th className="px-10 py-6 font-black text-[#A17C5F] uppercase tracking-widest text-[10px]">Registration Date</th>
+                <th className="px-10 py-6 font-black text-[#A17C5F] uppercase tracking-widest text-[10px] text-center">Frequency</th>
+                <th className="px-10 py-6 font-black text-[#A17C5F] uppercase tracking-widest text-[10px] text-right">Lifetime Valuation</th>
+                <th className="px-10 py-6 font-black text-[#A17C5F] uppercase tracking-widest text-[10px] text-right">Last Interaction</th>
               </tr>
-            ) : (
-              filteredCustomers.map((customer) => (
-                <tr key={customer.id} className="hover:bg-gray-50/50">
-                  <td className="px-6 py-4">
-                    <p className="font-semibold text-gray-900">{customer.full_name || 'Guest User'}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{customer.phone || 'No phone'}</p>
-                  </td>
-                  <td className="px-6 py-4 text-gray-500">
-                    {format(new Date(customer.joined_at), 'MMM d, yyyy')}
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    {customer.total_orders > 0 ? (
-                      <Badge variant={customer.total_orders > 3 ? 'gold' : 'secondary' as any} className="font-mono">
-                        {customer.total_orders}
-                      </Badge>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-right font-medium text-gray-900">
-                    {customer.total_spend > 0 ? formatCurrency(customer.total_spend) : '-'}
-                  </td>
-                  <td className="px-6 py-4 text-right text-gray-500 text-xs">
-                    {customer.last_order_at ? format(new Date(customer.last_order_at), 'MMM d, yyyy') : 'No orders yet'}
+            </thead>
+            <tbody className="divide-y divide-[#FDF6EC]">
+              {filteredCustomers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-10 py-24 text-center">
+                    <div className="flex flex-col items-center gap-6 animate-fade-in">
+                       <div className="w-20 h-20 bg-[#FDF6EC] rounded-[2rem] flex items-center justify-center text-[#F5E6CC]">
+                          <Users size={48} />
+                       </div>
+                       <div>
+                          <p className="text-2xl font-serif font-black text-[#3B1F0A]">No Clients Detected</p>
+                          <p className="text-[#8B5E3C] mt-2 font-medium italic opacity-60">"The catalog is empty. Time for a marketing blast?"</p>
+                       </div>
+                    </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredCustomers.map((customer) => (
+                  <tr key={customer.id} className="hover:bg-[#FDF6EC]/20 transition-all group">
+                    <td className="px-10 py-8">
+                      <p className="font-serif font-black text-[#3B1F0A] text-lg group-hover:text-[#C17839] transition-colors tracking-tight">
+                        {customer.full_name || 'Anonymous Guest'}
+                      </p>
+                      <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mt-1 opacity-50">
+                        {customer.phone || 'Connection Unverified'}
+                      </p>
+                    </td>
+                    <td className="px-10 py-8 text-[#8B5E3C] font-bold text-xs">
+                      {format(new Date(customer.joined_at), 'MMM dd, yyyy')}
+                    </td>
+                    <td className="px-10 py-8 text-center">
+                      {customer.total_orders > 0 ? (
+                        <Badge variant={customer.total_orders > 3 ? 'gold' : 'secondary' as any} className="font-serif font-black text-[10px] tracking-widest rounded-full px-4 border shadow-sm">
+                          {customer.total_orders} Orders
+                        </Badge>
+                      ) : (
+                        <span className="text-[#F5E6CC] font-black italic">Passive</span>
+                      )}
+                    </td>
+                    <td className="px-10 py-8 text-right font-serif font-black text-[#3B1F0A] text-lg">
+                      {customer.total_spend > 0 ? formatCurrency(customer.total_spend) : '₹0.00'}
+                    </td>
+                    <td className="px-10 py-8 text-right text-[#8B5E3C] text-[10px] font-black uppercase tracking-widest opacity-60">
+                      {customer.last_order_at ? format(new Date(customer.last_order_at), 'dd MMM, yyyy') : 'No History'}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
       
     </div>

@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { toast } from 'sonner';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { Category, Product, AdminRole } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 
@@ -149,101 +149,131 @@ export function ProductsClient({ initialProducts, categories, adminRole }: Produ
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 animate-fade-in text-[#3B1F0A] pb-20">
       
-      {/* Search & Actions Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
-        <div className="flex flex-1 gap-2 w-full">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+      {/* Premium Search & Actions Architecture */}
+      <div className="flex flex-col lg:flex-row gap-6 items-center justify-between bg-white p-6 lg:p-8 rounded-[2.5rem] border border-[#F5E6CC] shadow-soft relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-[#C17839]/10" />
+        
+        <div className="flex flex-col sm:flex-row flex-1 gap-4 w-full">
+          <div className="relative flex-1 max-w-sm group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C17839] group-focus-within:scale-110 transition-transform" size={18} />
             <Input 
-              placeholder="Search products..." 
-              className="pl-10 h-10"
+              placeholder="Search inventory..." 
+              className="pl-12 h-14 bg-[#FDF6EC]/30 border-[#F5E6CC] rounded-2xl focus:shadow-premium transition-all font-bold"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Filter size={16} className="text-gray-400 hidden sm:block" />
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest opacity-60 ml-2 whitespace-nowrap">Category:</span>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="h-10 px-3 rounded-xl border border-gray-200 bg-white text-sm outline-none focus:ring-1 focus:ring-[#C17839]"
+              className="h-14 px-6 rounded-2xl border border-[#F5E6CC] bg-white text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-[#C17839]/20 shadow-soft transition-all"
             >
-              <option value="all">All Categories</option>
+              <option value="all">Full Catalog</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
         </div>
         
         {['owner', 'manager'].includes(adminRole) && (
-          <Button onClick={() => { resetForm(); setIsModalOpen(true); }} className="bg-[#C17839] hover:bg-[#A6662E] flex gap-2 h-10 text-white w-full sm:w-auto">
-            <Plus size={18} /> Add Product
+          <Button 
+            onClick={() => { resetForm(); setIsModalOpen(true); }} 
+            className="bg-[#3B1F0A] hover:bg-black text-white flex gap-3 h-14 px-10 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg hover:shadow-xl transition-all active:scale-95 w-full lg:w-auto"
+          >
+            <Plus size={18} /> New Waffle
           </Button>
         )}
       </div>
 
-      {/* Product Grid */}
+      {/* Product Grid Architecture */}
       {filteredProducts.length === 0 ? (
-        <div className="bg-white p-12 rounded-2xl border border-gray-200 text-center text-gray-400">
-           <AlertCircle size={48} className="mx-auto mb-4 opacity-20" />
-           <p>No products found matching your search and category filters.</p>
+        <div className="bg-white p-20 rounded-[3rem] border border-[#F5E6CC] text-center shadow-soft animate-fade-in">
+           <div className="w-24 h-24 bg-[#FDF6EC] rounded-[2.5rem] flex items-center justify-center text-[#F5E6CC] mx-auto mb-8">
+              <AlertCircle size={56} />
+           </div>
+           <p className="text-2xl font-serif font-black text-[#3B1F0A]">Inventory Emptied</p>
+           <p className="text-[#8B5E3C] mt-2 font-medium italic opacity-60">"Your search didn't yield any sweet results."</p>
+           <Button variant="ghost" className="mt-8 text-[#C17839] font-black uppercase tracking-widest text-[10px]" onClick={() => {setSearchQuery(''); setCategoryFilter('all');}}>
+              Reset All Filters
+           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProducts.map(product => (
-            <div key={product.id} className={`bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md ${!product.is_available && 'opacity-60 bg-gray-50'}`}>
-              <div className="aspect-video relative bg-gray-100 overflow-hidden">
+            <div key={product.id} className={cn(
+               "bg-white rounded-[2.5rem] border border-[#F5E6CC] shadow-soft overflow-hidden flex flex-col transition-all duration-500 hover:shadow-premium group",
+               !product.is_available && "opacity-60 grayscale-[0.5]"
+            )}>
+              <div className="aspect-[4/3] relative bg-[#FDF6EC] overflow-hidden">
                  {product.image_url ? (
                    <img 
                      src={product.image_url} 
                      alt={product.name}
-                     className="w-full h-full object-cover"
+                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                    />
                  ) : (
-                   <div className="w-full h-full flex items-center justify-center text-gray-300">
-                      <ImageIcon size={48} />
+                   <div className="w-full h-full flex items-center justify-center text-[#F5E6CC]">
+                      <ImageIcon size={64} />
                    </div>
                  )}
-                 <div className="absolute top-3 right-3">
-                    <Badge variant={product.is_available ? 'success' : 'secondary'} className="uppercase text-[9px] font-bold tracking-wider">
-                      {product.is_available ? 'Active' : 'Hidden'}
+                 <div className="absolute top-4 right-4">
+                    <Badge variant={product.is_available ? 'success' : 'secondary'} className="uppercase text-[9px] font-black tracking-[0.2em] rounded-full px-4 py-1.5 border shadow-lg bg-white/90 backdrop-blur-sm">
+                      {product.is_available ? 'Live' : 'Hidden'}
                     </Badge>
                  </div>
+                 {!product.is_available && (
+                    <div className="absolute inset-0 bg-black/5 flex items-center justify-center pointer-events-none">
+                       <div className="bg-white/95 px-4 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-red-500 border border-red-100 shadow-xl">Offline</div>
+                    </div>
+                 )}
               </div>
               
-              <div className="p-5 flex-1 flex flex-col">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1 min-w-0 pr-2">
-                     <h3 className="font-bold text-gray-900 truncate" title={product.name}>{product.name}</h3>
-                     <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-                       {product.category?.name || categories.find(c => c.id === product.category_id)?.name || 'Uncategorized'}
-                     </span>
+              <div className="p-8 flex-1 flex flex-col">
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div className="flex-1 min-w-0">
+                     <h3 className="text-xl font-serif font-black text-[#3B1F0A] truncate tracking-tight">{product.name}</h3>
+                     <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mt-1 opacity-60">
+                       {product.category?.name || categories.find(c => c.id === product.category_id)?.name || 'Legacy Catalog'}
+                     </p>
                   </div>
-                  <p className="font-bold text-[#C17839] whitespace-nowrap">{formatCurrency(product.price)}</p>
+                  <p className="font-serif font-black text-[#C17839] text-xl">{formatCurrency(product.price)}</p>
                 </div>
                 
-                <p className="text-gray-500 text-xs line-clamp-2 mb-6 min-h-[32px]">
-                  {product.description || 'No description provided for this item.'}
+                <p className="text-[#8B5E3C] text-xs font-medium leading-relaxed line-clamp-2 mb-8 h-8 opacity-80">
+                  {product.description || 'No specialized description provided for this culinary creation.'}
                 </p>
 
-                <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
+                <div className="mt-auto pt-6 border-t border-[#FDF6EC] flex items-center justify-between">
                    <button 
                      onClick={() => handleToggleAvailability(product)}
-                     className={`text-[10px] font-bold uppercase tracking-tight transition-colors ${
-                        product.is_available ? 'text-gray-400 hover:text-red-500' : 'text-[#C17839] hover:text-[#A6662E]'
-                     }`}
+                     className={cn(
+                        "text-[9px] font-black uppercase tracking-widest transition-all px-4 py-2 rounded-xl border border-transparent active:scale-95",
+                        product.is_available ? "bg-[#FDF6EC] text-[#8B5E3C] hover:text-red-600 hover:border-red-100" : "bg-[#C17839]/10 text-[#C17839] hover:bg-[#C17839]/20"
+                     )}
                    >
-                     {product.is_available ? 'Disable Item' : 'Enable Item'}
+                     {product.is_available ? 'Take Offline' : 'Publish Live'}
                    </button>
 
                    <div className="flex gap-2">
-                     <Button variant="outline" size="icon" onClick={() => handleEdit(product)} className="w-8 h-8 rounded-full border-gray-200">
-                       <Edit3 size={14} className="text-gray-600" />
+                     <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleEdit(product)} 
+                        className="w-10 h-10 rounded-xl bg-white border border-[#F5E6CC] text-[#3B1F0A] hover:bg-[#FDF6EC] hover:shadow-soft transition-all"
+                     >
+                       <Edit3 size={16} />
                      </Button>
                      {adminRole === 'owner' && (
-                       <Button variant="outline" size="icon" onClick={() => handleDelete(product.id)} className="w-8 h-8 rounded-full border-gray-200 hover:bg-red-50 hover:border-red-100">
-                         <Trash2 size={14} className="text-red-500" />
+                       <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDelete(product.id)} 
+                          className="w-10 h-10 rounded-xl bg-white border border-red-100 text-red-500 hover:bg-red-50 hover:shadow-soft transition-all"
+                       >
+                         <Trash2 size={16} />
                        </Button>
                      )}
                    </div>
@@ -254,87 +284,100 @@ export function ProductsClient({ initialProducts, categories, adminRole }: Produ
         </div>
       )}
 
-      {/* Add/Edit Modal */}
+      {/* Add/Edit Modal Architecture */}
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        title={editingProduct ? 'Edit Product' : 'Add New Waffle'}
-        size="md"
+        title={editingProduct ? 'Refine Selection' : 'Forge New Waffle'}
+        size="lg"
       >
-        <form onSubmit={handleSubmit} className="p-1 space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <div className="space-y-1.5">
-               <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Product Name</label>
-               <Input 
-                 placeholder="e.g. Nutella Blast" 
-                 value={formData.name}
-                 onChange={e => setFormData({...formData, name: e.target.value})}
-                 required
-               />
+        <div className="p-2">
+           <div className="mb-8">
+              <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest opacity-60">Global Inventory Hub</p>
+              <h4 className="text-3xl font-serif font-black text-[#3B1F0A] tracking-tighter mt-1">
+                 {editingProduct ? 'Update Parameters' : 'Register New Item'}
+              </h4>
+           </div>
+           
+           <form onSubmit={handleSubmit} className="space-y-8">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest">Waffle Designation</label>
+                  <Input 
+                    placeholder="e.g. Belgian Truffle Noir" 
+                    className="h-14 rounded-2xl border-[#F5E6CC] bg-[#FDF6EC]/30 font-bold focus:shadow-premium"
+                    value={formData.name}
+                    onChange={e => setFormData({...formData, name: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest">Protocol Slug</label>
+                  <Input 
+                    placeholder="e.g. belgian-truffle-noir" 
+                    className="h-14 rounded-2xl border-[#F5E6CC] bg-[#FDF6EC]/30 font-bold focus:shadow-premium"
+                    value={formData.slug}
+                    onChange={e => setFormData({...formData, slug: e.target.value})}
+                    required
+                  />
+                </div>
              </div>
-             <div className="space-y-1.5">
-               <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">URL Slug</label>
-               <Input 
-                 placeholder="e.g. nutella-blast" 
-                 value={formData.slug}
-                 onChange={e => setFormData({...formData, slug: e.target.value})}
-                 required
-               />
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest">Premium Valuation (₹)</label>
+                  <Input 
+                    type="number"
+                    placeholder="0.00" 
+                    className="h-14 rounded-2xl border-[#F5E6CC] bg-[#FDF6EC]/30 font-bold focus:shadow-premium"
+                    value={formData.price}
+                    onChange={e => setFormData({...formData, price: Number(e.target.value)})}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest">Menu Category</label>
+                  <select 
+                    className="w-full h-14 px-6 rounded-2xl border border-[#F5E6CC] bg-[#FDF6EC]/30 text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-[#C17839]/20"
+                    value={formData.category_id}
+                    onChange={e => setFormData({...formData, category_id: e.target.value})}
+                    required
+                  >
+                    <option value="" disabled>Select Segment</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
              </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <div className="space-y-1.5">
-               <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Base Price (₹)</label>
-               <Input 
-                 type="number"
-                 placeholder="0" 
-                 value={formData.price}
-                 onChange={e => setFormData({...formData, price: Number(e.target.value)})}
-                 required
-               />
+             <div className="space-y-2">
+                <label className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest">Culinary Narrative</label>
+                <textarea 
+                  className="w-full rounded-2xl border border-[#F5E6CC] bg-[#FDF6EC]/30 p-6 text-sm font-medium focus:ring-2 focus:ring-[#C17839]/20 outline-none min-h-[120px] resize-none"
+                  placeholder="Describe the sensory experience..."
+                  value={formData.description}
+                  onChange={e => setFormData({...formData, description: e.target.value})}
+                />
              </div>
-             <div className="space-y-1.5">
-               <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Category</label>
-               <select 
-                 className="w-full h-10 px-3 rounded-xl border border-gray-200 bg-white text-sm outline-none focus:ring-1 focus:ring-[#C17839]"
-                 value={formData.category_id}
-                 onChange={e => setFormData({...formData, category_id: e.target.value})}
-                 required
-               >
-                 <option value="" disabled>Select a category</option>
-                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-               </select>
+
+             <div className="space-y-2">
+                <label className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest">Image Asset Source</label>
+                <Input 
+                  placeholder="CDN or External URL" 
+                  className="h-14 rounded-2xl border-[#F5E6CC] bg-[#FDF6EC]/30 font-bold focus:shadow-premium"
+                  value={formData.image_url}
+                  onChange={e => setFormData({...formData, image_url: e.target.value})}
+                />
+                <p className="text-[9px] text-[#A17C5F] font-bold italic mt-2 opacity-60">High-resolution assets recommended for the 3D Hero Carousel.</p>
              </div>
-          </div>
 
-          <div className="space-y-1.5">
-             <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Description</label>
-             <textarea 
-               className="w-full rounded-xl border border-gray-200 p-3 text-sm focus:ring-1 focus:ring-[#C17839] outline-none min-h-[100px] resize-none"
-               placeholder="Briefly describe the product, ingredients, etc."
-               value={formData.description}
-               onChange={e => setFormData({...formData, description: e.target.value})}
-             />
-          </div>
-
-          <div className="space-y-1.5">
-             <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Image URL</label>
-             <Input 
-               placeholder="Paste image link here" 
-               value={formData.image_url}
-               onChange={e => setFormData({...formData, image_url: e.target.value})}
-             />
-             <p className="text-[10px] text-gray-400 italic">Recommendation: 1200x800px or 3:2 aspect ratio.</p>
-          </div>
-
-          <div className="pt-6 flex justify-end gap-3 border-t border-gray-100">
-             <Button variant="ghost" type="button" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-             <Button type="submit" className="bg-[#C17839] hover:bg-[#A6662E] text-white px-8">
-                {editingProduct ? 'Save Changes' : 'Create Product'}
-             </Button>
-          </div>
-        </form>
+             <div className="pt-10 flex flex-col sm:flex-row justify-end gap-4 border-t border-[#FDF6EC]">
+                <Button variant="ghost" type="button" onClick={() => setIsModalOpen(false)} className="h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] px-8">Discard</Button>
+                <Button type="submit" className="h-14 rounded-2xl bg-[#3B1F0A] hover:bg-black text-white font-black uppercase tracking-widest text-[10px] px-12 shadow-lg hover:shadow-xl transition-all active:scale-95">
+                   {editingProduct ? 'Finalize Changes' : 'Commit to Catalog'}
+                </Button>
+             </div>
+           </form>
+        </div>
       </Modal>
 
     </div>

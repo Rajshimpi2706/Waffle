@@ -16,7 +16,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-[#C4A882] text-sm leading-relaxed mb-6">
-              "Har Bite Mein Happiness" - Serving the finest Belgian waffles with premium ingredients and a whole lot of love.
+              "Har Bite Mein Happiness" - Serving the finest Premium waffles with premium ingredients and a whole lot of love.
             </p>
             <div className="flex items-center gap-4">
               <a href="#" className="p-2 rounded-full bg-white/10 hover:bg-[#C17839] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center">

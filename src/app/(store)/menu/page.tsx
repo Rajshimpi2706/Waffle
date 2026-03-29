@@ -1,10 +1,11 @@
 import { Suspense } from 'react';
+import { Star, ShoppingBag } from 'lucide-react';
 import { MenuClient } from './MenuClient';
 import { createServiceClient } from '@/lib/supabase/server';
 
 export const metadata = {
   title: 'Our Delicious Menu | Waffle Wala',
-  description: 'Explore our premium range of Classic, Chocolate, and Premium Belgian Waffles. Har Bite Mein Happiness!',
+  description: 'Explore our premium range of Classic, Chocolate, and Premium Waffles. Har Bite Mein Happiness!',
 };
 
 // Ensure page is always dynamic to fetch latest from DB
@@ -56,16 +57,27 @@ export default async function MenuPage() {
   const products = await getMenuData();
 
   return (
-    <div className="bg-[#FDF6EC] min-h-screen py-12">
+    <div className="bg-[#FDF6EC] min-h-screen py-20 translate-y-[-1px]">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-12 animate-fade-in shadow-sm p-8 bg-white rounded-3xl border border-[#F5E6CC]">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-[#3B1F0A] mb-4 italic">Our Delicious Menu</h1>
-          <div className="w-16 h-1 bg-[#C17839] mx-auto rounded-full mb-4" />
-          <p className="text-[#8B5E3C] text-lg font-medium">
-            "Har Bite Mein Happiness"
+        <div className="text-center max-w-3xl mx-auto mb-20 animate-fade-in py-12 px-8 bg-white rounded-[3rem] shadow-soft border border-[#F5E6CC] relative overflow-hidden">
+          {/* Subtle Accent */}
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-transparent via-[#C17839] to-transparent opacity-30" />
+          
+          <h1 className="text-5xl md:text-6xl font-serif font-black text-[#3B1F0A] mb-6 tracking-tighter">
+            Our <span className="text-[#C17839]">Signature</span> Menu
+          </h1>
+          
+          <div className="flex items-center justify-center gap-3 mb-8 opacity-20">
+             <div className="h-[1px] w-12 bg-[#8B5E3C]" />
+             <Star size={12} className="fill-[#8B5E3C]" />
+             <div className="h-[1px] w-12 bg-[#8B5E3C]" />
+          </div>
+
+          <p className="text-xl text-[#8B5E3C] font-medium italic mb-4">
+            "Every bite is a promise of happiness."
           </p>
-          <p className="text-[#8B5E3C]/80 mt-2 text-sm">
-            Freshly baked, 100% vegetarian Belgian waffles made with love and premium chocolate.
+          <p className="text-[#8B5E3C]/60 max-w-xl mx-auto text-sm font-bold uppercase tracking-widest leading-relaxed">
+            Authentic Premium Recipe • 100% Vegetarian • Premium Dark Chocolate
           </p>
         </div>
 

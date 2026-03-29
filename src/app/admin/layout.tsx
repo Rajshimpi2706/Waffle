@@ -35,55 +35,62 @@ export default async function AdminLayout({
     { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { label: 'Menu & Products', href: '/admin/products', icon: Package },
     { label: 'Customers', href: '/admin/customers', icon: Users },
-    { label: 'Settings', href: '/admin/settings', icon: Settings },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col fixed inset-y-0 z-10">
-        <div className="p-6 border-b border-gray-200">
-          <Link href="/admin" className="font-serif text-2xl font-bold tracking-tight text-[#3B1F0A]">
-            Waffle<span className="text-[#C17839]">Admin</span>.
-          </Link>
-          <div className="mt-4 flex items-center gap-3">
-             <div className="w-8 h-8 rounded-full bg-[#E8A535] text-[#3B1F0A] flex items-center justify-center font-bold text-sm">
-               {user.email?.charAt(0).toUpperCase()}
-             </div>
-             <div className="overflow-hidden">
-               <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
-               <p className="text-xs text-gray-500 capitalize">{adminUser.role}</p>
-             </div>
+    <div className="min-h-screen bg-[#FDF6EC] flex">
+      {/* Premium Sidebar Architecture */}
+      <aside className="w-80 p-8 hidden lg:flex flex-col fixed inset-y-0 z-10">
+        <div className="flex-1 bg-white rounded-[3rem] border border-[#F5E6CC] shadow-premium flex flex-col overflow-hidden">
+          
+          <div className="p-10 border-b border-[#FDF6EC]">
+            <Link href="/admin" className="block group">
+              <span className="font-serif text-3xl font-black tracking-tighter text-[#3B1F0A] group-hover:text-[#C17839] transition-colors">
+                Waffle<span className="text-[#C17839]">Wala</span>.
+              </span>
+              <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.4em] mt-2 opacity-50">Admin Protocol</p>
+            </Link>
+            
+            <div className="mt-10 p-5 bg-[#FDF6EC]/50 rounded-3xl border border-[#F5E6CC] flex items-center gap-4">
+               <div className="w-12 h-12 rounded-2xl bg-[#3B1F0A] text-white flex items-center justify-center font-serif font-black text-xl shadow-md border border-white/20">
+                 {user.email?.charAt(0).toUpperCase()}
+               </div>
+               <div className="overflow-hidden">
+                 <p className="text-xs font-black text-[#3B1F0A] truncate tracking-tight">{user.email}</p>
+                 <p className="text-[9px] font-bold text-[#C17839] uppercase tracking-widest mt-0.5">{adminUser.role}</p>
+               </div>
+            </div>
           </div>
-        </div>
-        
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:text-[#C17839] hover:bg-[#FDF6EC] transition-colors"
-              >
-                <Icon size={18} />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+          
+          <nav className="flex-1 p-6 space-y-2 overflow-y-auto custom-scrollbar">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-4 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-[#8B5E3C] hover:text-[#C17839] hover:bg-[#FDF6EC] transition-all hover:translate-x-1 group"
+                >
+                  <Icon size={18} className="group-hover:scale-110 transition-transform" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
 
-        <div className="p-4 border-t border-gray-200">
-           {/* In a real app, this would be a client component trigger to logout */}
-           <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
-              <LogOut size={18} /> Storefront
-           </Link>
+          <div className="p-8 border-t border-[#FDF6EC]">
+             <Link href="/" className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-50 hover:bg-red-100 transition-all active:scale-95">
+                <LogOut size={16} /> Exit To Store
+             </Link>
+          </div>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 ml-64 p-8">
-        {children}
+      {/* Main Content Area */}
+      <main className="flex-1 lg:ml-80 p-8 lg:p-16 h-screen overflow-y-auto">
+        <div className="max-w-7xl mx-auto">
+          {children}
+        </div>
       </main>
     </div>
   );

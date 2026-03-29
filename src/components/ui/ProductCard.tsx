@@ -39,52 +39,65 @@ export function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-[#F5E6CC] group hover:shadow-md transition-all duration-300 flex flex-col h-full">
-      {/* Image */}
-      <div className="relative aspect-square overflow-hidden bg-[#FDF6EC]">
+    <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-soft border border-[#F5E6CC] group hover:shadow-premium hover:-translate-y-2 transition-all duration-500 flex flex-col h-full relative">
+      {/* Glow Effect Layer */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#C17839]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+      {/* Image Container with Glow */}
+      <div className="relative aspect-[4/5] overflow-hidden bg-[#FDF6EC] m-3 rounded-[2rem]">
         <Image
           src={imgSrc}
           alt={product.name}
           fill
-          className="object-cover transition-transform duration-500 group-hover:scale-110"
+          className="object-cover transition-transform duration-700 group-hover:scale-110"
           onError={() => setImgSrc(fallbackImage)}
         />
+        
+        {/* Subtle Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
         {product.is_featured && (
-          <div className="absolute top-4 left-4">
-            <Badge variant="gold" className="px-3 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full shadow-sm">
+          <div className="absolute top-4 left-4 z-10">
+            <Badge variant="gold" className="px-4 py-1.5 text-[10px] uppercase font-bold tracking-[0.15em] rounded-full shadow-premium backdrop-blur-md bg-[#C17839]/90 border-none text-white">
               Bestseller
             </Badge>
           </div>
         )}
+
+        <div className="absolute top-4 right-4 z-10">
+          <div className="bg-white/90 backdrop-blur-md text-[#22C55E] text-[10px] font-black px-3 py-1.5 rounded-full border border-[#22C55E]/20 flex items-center gap-1.5 shadow-sm">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
+            VEG
+          </div>
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="p-6 flex flex-col flex-1">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="font-serif text-xl font-bold text-[#3B1F0A] group-hover:text-[#C17839] transition-colors line-clamp-1">
+      {/* Content Architecture */}
+      <div className="p-8 pt-8 flex flex-col flex-1 relative z-10">
+        <div className="min-h-[4rem] mb-4">
+          <h3 className="font-serif text-2xl font-bold text-[#3B1F0A] group-hover:text-[#C17839] transition-colors tracking-tight line-clamp-2 leading-tight">
             {product.name}
           </h3>
-          <span className="bg-green-50 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded border border-green-100 flex items-center gap-1 shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>
-            VEG
-          </span>
         </div>
         
-        <p className="text-sm text-[#8B5E3C] mb-6 line-clamp-2 leading-relaxed">
-          {product.description}
-        </p>
+        <div className="min-h-[3rem] mb-10">
+          <p className="text-[13px] text-[#8B5E3C]/80 line-clamp-2 leading-relaxed font-medium">
+            {product.description}
+          </p>
+        </div>
 
-        <div className="mt-auto flex items-center justify-between gap-4">
+        <div className="mt-auto flex items-center justify-between gap-6">
           <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-wider text-[#A17C5F] font-bold">Price</span>
-            <span className="text-xl font-bold text-[#3B1F0A]">₹{product.price}</span>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-[#A17C5F] font-black mb-1 opacity-60">Price</span>
+            <span className="text-2xl font-serif font-black text-[#3B1F0A]">₹{product.price}</span>
           </div>
           
           <Button 
             onClick={handleAddToCart}
-            className="rounded-full bg-[#3B1F0A] hover:bg-[#C17839] text-white px-6 py-2 h-auto text-sm font-bold shadow-sm transition-all active:scale-95"
+            size="lg"
+            className="rounded-full bg-[#3B1F0A] hover:bg-[#C17839] text-white px-8 font-bold shadow-lg transition-all active:scale-90"
           >
-            Add to Cart
+            Add
           </Button>
         </div>
       </div>

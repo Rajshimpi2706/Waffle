@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Search, Filter, AlertCircle, RefreshCw } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
@@ -98,133 +98,157 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-fade-in text-gray-900">
+    <div className="space-y-8 animate-fade-in text-[#3B1F0A] pb-20">
       
-      {/* Controls */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row gap-4 justify-between items-center">
-        <div className="flex w-full sm:w-auto gap-2">
-          <div className="relative w-full sm:w-64">
-             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+      {/* Premium Controls Architecture */}
+      <div className="bg-white rounded-[2.5rem] p-6 lg:p-8 shadow-soft border border-[#F5E6CC] flex flex-col lg:flex-row gap-6 justify-between items-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-[#C17839]/10" />
+        
+        <div className="flex flex-col sm:flex-row w-full lg:w-auto gap-4 items-center">
+          <div className="relative w-full sm:w-80 group">
+             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C17839] group-focus-within:scale-110 transition-transform" size={18} />
              <Input 
-               placeholder="Search orders..." 
-               className="pl-10 h-10"
+               placeholder="Search protocol, name..." 
+               className="pl-12 h-14 bg-[#FDF6EC]/30 border-[#F5E6CC] rounded-2xl focus:shadow-premium transition-all font-bold"
                value={searchQuery}
                onChange={(e) => setSearchQuery(e.target.value)}
              />
           </div>
-          <Select 
-            value={statusFilter} 
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-32 h-10"
-          >
-            <option value="active">Active</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="all">All Today</option>
-          </Select>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+             <span className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest opacity-60 ml-2 whitespace-nowrap">Status:</span>
+             <Select 
+                value={statusFilter} 
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-40 h-14 bg-white border-[#F5E6CC] rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-soft"
+             >
+                <option value="active">Active Orders</option>
+                <option value="completed">Fulfilled</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="all">Full History</option>
+             </Select>
+          </div>
         </div>
         
-        <Button variant="outline" size="sm" onClick={() => window.location.reload()} className="flex gap-2 w-full sm:w-auto">
-          <RefreshCw size={16} /> Refresh
+        <Button 
+          variant="outline" 
+          size="lg" 
+          onClick={() => window.location.reload()} 
+          className="h-14 rounded-2xl border-[#F5E6CC] flex gap-3 px-8 text-[#3B1F0A] font-black uppercase tracking-widest text-[10px] hover:bg-[#FDF6EC] hover:shadow-soft transition-all active:scale-95 group"
+        >
+          <RefreshCw size={16} className="group-hover:rotate-180 transition-transform duration-700" /> 
+          Sync Records
         </Button>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto min-h-[400px]">
-        <table className="w-full text-sm text-left align-middle font-sans">
-          <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-4 font-medium">Order & Time</th>
-              <th className="px-6 py-4 font-medium">Customer (Type)</th>
-              <th className="px-6 py-4 font-medium">Items</th>
-              <th className="px-6 py-4 font-medium">Payment</th>
-              <th className="px-6 py-4 font-medium w-48">Status Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredOrders.length === 0 ? (
+      {/* Premium Table Architecture */}
+      <div className="bg-white rounded-[3rem] shadow-medium border border-[#F5E6CC] overflow-hidden relative">
+        <div className="overflow-x-auto min-h-[500px]">
+          <table className="w-full text-sm text-left align-middle">
+            <thead className="bg-[#FDF6EC]/50">
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
-                  <div className="flex flex-col items-center gap-2">
-                     <AlertCircle size={32} />
-                     <p>No orders found matching your filters.</p>
-                  </div>
-                </td>
+                <th className="px-10 py-6 font-black text-[#A17C5F] uppercase tracking-widest text-[10px]">Reference & Chrono</th>
+                <th className="px-10 py-6 font-black text-[#A17C5F] uppercase tracking-widest text-[10px]">Client (Type)</th>
+                <th className="px-10 py-6 font-black text-[#A17C5F] uppercase tracking-widest text-[10px]">Composition</th>
+                <th className="px-10 py-6 font-black text-[#A17C5F] uppercase tracking-widest text-[10px]">Financials</th>
+                <th className="px-10 py-6 font-black text-[#A17C5F] uppercase tracking-widest text-[10px] w-64">Protocol Stage</th>
               </tr>
-            ) : (
-              filteredOrders.map(order => (
-                <tr key={order.id} className="hover:bg-gray-50/50">
-                  
-                  {/* Order ID and Date */}
-                  <td className="px-6 py-4">
-                    <p className="font-mono font-medium text-gray-900">{order.order_number}</p>
-                    <p className="text-gray-500 text-xs mt-1">{format(new Date(order.created_at), 'hh:mm a')}</p>
-                  </td>
-
-                  {/* Customer */}
-                  <td className="px-6 py-4">
-                    <p className="font-medium text-gray-900">
-                      {order.shipping_address?.full_name || order.customer?.full_name || 'Guest'}
-                    </p>
-                    <Badge variant="secondary" className="mt-1 text-[10px] uppercase font-bold tracking-tight">
-                      {order.order_type}
-                    </Badge>
-                  </td>
-
-                  {/* Items Summary */}
-                  <td className="px-6 py-4">
-                    <div className="max-w-[200px]">
-                      {order.order_items?.map((item: any, idx: number) => (
-                        <p key={idx} className="truncate text-gray-700 text-xs">
-                           <span className="font-semibold">{item.quantity}x</span> {item.product?.name || item.product_name}
-                        </p>
-                      ))}
+            </thead>
+            <tbody className="divide-y divide-[#FDF6EC]">
+              {filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-10 py-24 text-center">
+                    <div className="flex flex-col items-center gap-6 animate-fade-in">
+                       <div className="w-20 h-20 bg-[#FDF6EC] rounded-[2rem] flex items-center justify-center text-[#F5E6CC]">
+                          <AlertCircle size={48} />
+                       </div>
+                       <div>
+                          <p className="text-2xl font-serif font-black text-[#3B1F0A]">No Records Found</p>
+                          <p className="text-[#8B5E3C] mt-2 font-medium italic opacity-60">"Adjust your filters to discover hidden treasures."</p>
+                       </div>
                     </div>
                   </td>
-
-                  {/* Financials */}
-                  <td className="px-6 py-4">
-                    <p className="font-semibold text-gray-900">{formatCurrency(order.total_amount)}</p>
-                    <Badge variant={order.payment?.[0]?.status === 'paid' ? 'success' : order.payment?.[0]?.status === 'failed' ? 'destructive' : 'secondary' as any} className="mt-1 uppercase text-[10px] font-bold">
-                      {order.payment?.[0]?.status || 'pending'}
-                    </Badge>
-                  </td>
-
-                  {/* Actions / Status Picker */}
-                  <td className="px-6 py-4">
-                    {!['delivered', 'cancelled', 'failed', 'refunded'].includes(order.status) ? (
-                      <Select 
-                        value={order.status}
-                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                        className={`text-xs font-bold uppercase ${
-                          order.status === 'pending' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' :
-                          order.status === 'preparing' ? 'bg-orange-50 text-orange-800 border-orange-200' :
-                          order.status === 'ready' ? 'bg-purple-50 text-purple-800 border-purple-200' :
-                          order.status === 'out_for_delivery' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' : ''
-                        }`}
-                      >
-                         {/* We enforce flow manually by providing options based on Phase 4 logic */}
-                         {order.status === 'pending' && <option value="pending">Pending</option>}
-                         {(order.status === 'pending') && <option value="confirmed">Confirm Order</option>}
-                         {(order.status === 'pending' || order.status === 'confirmed') && <option value="preparing">Start Preparing</option>}
-                         <option value="ready">Mark as Ready</option>
-                         {order.order_type === 'delivery' && <option value="out_for_delivery">Out for Delivery</option>}
-                         <option value="delivered">Mark Delivered</option>
-                         {adminRole !== 'staff' && <option value="cancelled">Cancel Order</option>}
-                         {adminRole === 'owner' && <option value="failed">Mark Failed</option>}
-                      </Select>
-                    ) : (
-                       <Badge variant={getStatusBadgeVariant(order.status) as any} className="capitalize font-bold">
-                         {order.status.replace(/_/g, ' ')}
-                       </Badge>
-                    )}
-                  </td>
-
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredOrders.map(order => (
+                  <tr key={order.id} className="hover:bg-[#FDF6EC]/20 transition-all group">
+                    
+                    {/* Order ID and Date */}
+                    <td className="px-10 py-8">
+                      <p className="font-serif font-black text-[#3B1F0A] text-lg group-hover:text-[#C17839] transition-colors tracking-tight">#{order.order_number}</p>
+                      <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mt-1 opacity-50">{format(new Date(order.created_at), 'hh:mm a, dd MMM')}</p>
+                    </td>
+
+                    {/* Customer */}
+                    <td className="px-10 py-8">
+                      <p className="font-bold text-[#3B1F0A] tracking-tight">
+                        {order.shipping_address?.full_name || order.customer?.full_name || 'Anonymous Guest'}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C17839] opacity-40" />
+                        <span className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest opacity-60">
+                           {order.order_type}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Items Summary */}
+                    <td className="px-10 py-8">
+                      <div className="max-w-[250px] space-y-1">
+                        {order.order_items?.map((item: any, idx: number) => (
+                          <p key={idx} className="truncate text-[#8B5E3C] text-[10px] font-bold uppercase tracking-wide">
+                             <span className="text-[#3B1F0A] font-black">{item.quantity}x</span> {item.product?.name || item.product_name}
+                          </p>
+                        ))}
+                      </div>
+                    </td>
+
+                    {/* Financials */}
+                    <td className="px-10 py-8">
+                      <p className="font-serif font-black text-[#3B1F0A] text-xl">{formatCurrency(order.total_amount)}</p>
+                      <Badge variant={order.payment?.[0]?.status === 'paid' ? 'success' : order.payment?.[0]?.status === 'failed' ? 'destructive' : 'secondary' as any} className="mt-2 uppercase text-[9px] font-black tracking-widest rounded-full px-4 border shadow-sm">
+                        {order.payment?.[0]?.status || 'pending payment'}
+                      </Badge>
+                    </td>
+
+                    {/* Actions / Status Picker */}
+                    <td className="px-10 py-8">
+                      {!['delivered', 'cancelled', 'failed', 'refunded'].includes(order.status) ? (
+                        <div className="relative group/picker">
+                          <Select 
+                            value={order.status}
+                            onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                            className={cn(
+                              "h-12 text-[10px] font-black uppercase tracking-widest rounded-xl border-[#F5E6CC] shadow-soft transition-all",
+                              order.status === 'pending' ? 'bg-yellow-50/50 text-yellow-800' :
+                              order.status === 'preparing' ? 'bg-orange-50/50 text-orange-800' :
+                              order.status === 'ready' ? 'bg-purple-50/50 text-purple-800' :
+                              order.status === 'out_for_delivery' ? 'bg-indigo-50/50 text-indigo-800' : ''
+                            )}
+                          >
+                             {order.status === 'pending' && <option value="pending">Pending</option>}
+                             {(order.status === 'pending') && <option value="confirmed">Confirm</option>}
+                             {(order.status === 'pending' || order.status === 'confirmed') && <option value="preparing">Prepare</option>}
+                             <option value="ready">Ready</option>
+                             {order.order_type === 'delivery' && <option value="out_for_delivery">Transit</option>}
+                             <option value="delivered">Fulfil</option>
+                             {adminRole !== 'staff' && <option value="cancelled">Cancel</option>}
+                             {adminRole === 'owner' && <option value="failed">Fail</option>}
+                          </Select>
+                          <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#22C55E] animate-pulse shadow-sm border border-white" />
+                        </div>
+                      ) : (
+                         <Badge variant={getStatusBadgeVariant(order.status) as any} className="capitalize font-black text-[10px] tracking-widest rounded-full px-6 py-2 border shadow-sm">
+                           {order.status.replace(/_/g, ' ')}
+                         </Badge>
+                      )}
+                    </td>
+
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
     </div>

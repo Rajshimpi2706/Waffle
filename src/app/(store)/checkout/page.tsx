@@ -7,7 +7,7 @@ import { useCartStore } from '@/lib/cart';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { ShoppingBag, ArrowLeft, ShieldCheck, Phone, User, CreditCard, Loader2 } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, ShieldCheck, Phone, User, CreditCard, Loader2, Star } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function CheckoutPage() {
@@ -155,15 +155,18 @@ export default function CheckoutPage() {
 
   if (isEmpty && !isProcessing) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-4">
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center max-w-md w-full animate-fade-in">
-          <div className="w-16 h-16 bg-[#FDF6EC] rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <ShoppingBag className="text-[#C17839]" size={32} />
+      <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 bg-[#FDF6EC]">
+        <div className="bg-white p-12 rounded-[3rem] shadow-premium border border-[#F5E6CC] text-center max-w-md w-full animate-fade-in relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-transparent via-[#C17839] to-transparent opacity-20" />
+          <div className="w-24 h-24 bg-[#FDF6EC] rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-soft rotate-3">
+            <ShoppingBag className="text-[#C17839]" size={40} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h1>
-          <p className="text-gray-500 mb-8">Add some delicious waffles to your cart before checking out.</p>
-          <Button onClick={() => router.push('/menu')} variant="primary" className="w-full h-12 rounded-xl">
-            Browse Menu
+          <h1 className="text-3xl font-serif font-black text-[#3B1F0A] mb-4">Your cart is empty</h1>
+          <p className="text-[#8B5E3C] mb-10 font-medium italic opacity-70">
+            "Happiness is just a few waffles away. Let's fill up that cart!"
+          </p>
+          <Button onClick={() => router.push('/menu')} size="xl" className="w-full h-16 rounded-2xl bg-[#3B1F0A] hover:bg-black text-white shadow-lg active:scale-95">
+            Explore Menu
           </Button>
         </div>
       </div>
@@ -171,118 +174,152 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto w-full px-4 py-8 lg:py-12">
-      <Script 
-        src="https://checkout.razorpay.com/v1/checkout.js" 
-        onLoad={() => setRazorpayLoaded(true)}
-        onError={() => toast.error('Failed to load payment system')}
-      />
-      
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-        <div className="flex-1 space-y-8 animate-fade-in">
-          <div className="flex items-center gap-4 mb-2">
-            <button onClick={() => router.back()} className="p-2 hover:bg-white rounded-lg transition-colors">
-              <ArrowLeft size={20} />
-            </button>
-            <h1 className="text-3xl font-extrabold text-gray-900">Checkout</h1>
-          </div>
-
-          <section className="bg-white rounded-3xl p-6 lg:p-8 shadow-sm border border-gray-100">
-            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <User size={20} className="text-[#C17839]" />
-              Customer Information
-            </h2>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 ml-1">Full Name</label>
-                <div className="relative">
-                  <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <Input 
-                    placeholder="Enter your name"
-                    className="pl-11 h-12 bg-gray-50/50 border-gray-200"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    error={!!errors.name}
-                  />
-                </div>
-                {errors.name && <p className="text-xs text-red-500 mt-1 ml-1 font-medium">{errors.name}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 ml-1">Phone Number</label>
-                <div className="relative">
-                  <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <Input 
-                    type="tel"
-                    placeholder="10-digit mobile number"
-                    className="pl-11 h-12 bg-gray-50/50 border-gray-200"
-                    value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                    error={!!errors.phone}
-                    maxLength={10}
-                  />
-                </div>
-                {errors.phone && <p className="text-xs text-red-500 mt-1 ml-1 font-medium">{errors.phone}</p>}
+    <div className="bg-[#FDF6EC] min-h-screen">
+      <div className="max-w-7xl mx-auto w-full px-4 py-16 lg:py-24">
+        <Script 
+          src="https://checkout.razorpay.com/v1/checkout.js" 
+          onLoad={() => setRazorpayLoaded(true)}
+          onError={() => toast.error('Failed to load payment system')}
+        />
+        
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
+          <div className="flex-1 space-y-12 animate-fade-in">
+            <div className="flex items-center gap-6 mb-4">
+              <button 
+                onClick={() => router.back()} 
+                className="w-12 h-12 flex items-center justify-center bg-white border border-[#F5E6CC] rounded-2xl shadow-soft hover:shadow-medium hover:-translate-x-1 transition-all text-[#3B1F0A]"
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <div>
+                <h1 className="text-4xl md:text-5xl font-serif font-black text-[#3B1F0A] tracking-tighter">Checkout</h1>
+                <p className="text-[10px] text-[#A17C5F] font-black uppercase tracking-[0.2em] mt-1 opacity-60">Secure Order Process</p>
               </div>
             </div>
-          </section>
 
-          <div className="bg-white rounded-2xl p-4 border border-gray-100 flex items-start gap-3 shadow-sm">
-            <ShieldCheck className="text-[#C17839] shrink-0" size={20} />
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Your payment is handled securely via <strong>Razorpay</strong>. We do not store your card details.
-            </p>
-          </div>
-        </div>
-
-        <div className="w-full lg:w-[400px] space-y-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <div className="bg-white rounded-3xl p-6 lg:p-8 shadow-sm border border-gray-100 sticky top-24">
-            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <ShoppingBag size={20} className="text-[#C17839]" />
-              Order Summary
-            </h2>
-
-            <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar mb-8">
-              {items.map((item) => (
-                <div key={item.id} className="flex justify-between gap-4">
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900 text-sm">{item.productName}</p>
-                    <p className="text-xs text-gray-500">Qty: {item.quantity} × {formatCurrency(item.unitPrice)}</p>
+            <section className="bg-white rounded-[3rem] p-8 lg:p-12 shadow-soft border border-[#F5E6CC] relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-2 h-full bg-[#C17839]/10" />
+              <h2 className="text-2xl font-serif font-black text-[#3B1F0A] mb-10 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-[#FDF6EC] flex items-center justify-center text-[#C17839]">
+                  <User size={20} />
+                </div>
+                Customer Details
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest ml-1">Full Name</label>
+                  <div className="relative group">
+                    <User size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#C17839] group-focus-within:scale-110 transition-transform" />
+                    <Input 
+                      placeholder="Enter your name"
+                      className="pl-14 h-14 bg-[#FDF6EC]/30 border-[#F5E6CC] rounded-2xl focus:shadow-premium transition-all text-[#3B1F0A] font-bold"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      error={!!errors.name}
+                    />
                   </div>
-                  <p className="font-bold text-gray-900 text-sm">
-                    {formatCurrency(Number(item.unitPrice) * item.quantity)}
-                  </p>
+                  {errors.name && <p className="text-[10px] text-red-500 mt-1 ml-1 font-black uppercase tracking-widest">{errors.name}</p>}
                 </div>
-              ))}
-            </div>
 
-            <div className="space-y-3 pt-6 border-t border-gray-100">
-              <div className="flex justify-between text-gray-600">
-                <span className="text-sm">Subtotal</span>
-                <span className="font-medium">{formatCurrency(subtotal)}</span>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest ml-1">Phone Number</label>
+                  <div className="relative group">
+                    <Phone size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#C17839] group-focus-within:scale-110 transition-transform" />
+                    <Input 
+                      type="tel"
+                      placeholder="10-digit mobile number"
+                      className="pl-14 h-14 bg-[#FDF6EC]/30 border-[#F5E6CC] rounded-2xl focus:shadow-premium transition-all text-[#3B1F0A] font-bold"
+                      value={formData.phone}
+                      onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      error={!!errors.phone}
+                      maxLength={10}
+                    />
+                  </div>
+                  {errors.phone && <p className="text-[10px] text-red-500 mt-1 ml-1 font-black uppercase tracking-widest">{errors.phone}</p>}
+                </div>
               </div>
-              <div className="flex justify-between text-[#E8A535] pt-3 border-t border-gray-100">
-                <span className="text-lg font-bold">Total</span>
-                <span className="text-2xl font-black">{formatCurrency(subtotal)}</span>
+            </section>
+
+            <div className="bg-[#3B1F0A] rounded-[2rem] p-8 flex items-start gap-6 shadow-medium relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#C17839]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+              <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-[#C17839] shrink-0">
+                <ShieldCheck size={24} />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-white font-bold tracking-tight">Encrypted Checkout</h4>
+                <p className="text-sm text-white/60 leading-relaxed font-medium">
+                  Your payment is handled securely via <strong>Razorpay</strong>. We follow 256-bit encryption standards and do not store your sensitive card or banking details.
+                </p>
               </div>
             </div>
+          </div>
 
-            <Button 
-              onClick={handlePayment} 
-              className="w-full mt-8 h-14 rounded-2xl shadow-lg hover:shadow-xl transition-all"
-              variant="primary"
-              loading={isProcessing}
-              disabled={!razorpayLoaded || isEmpty}
-            >
-              <CreditCard size={20} className="mr-2" />
-              Pay Now
-            </Button>
+          <div className="w-full lg:w-[450px] space-y-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <div className="bg-white rounded-[3rem] p-10 lg:p-12 shadow-premium border border-[#F5E6CC] lg:sticky lg:top-28 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#FDF6EC] rounded-full -translate-y-1/2 translate-x-1/2 opacity-50" />
+              
+              <h2 className="text-2xl font-serif font-black text-[#3B1F0A] mb-10 flex items-center gap-4 relative z-10">
+                <div className="w-10 h-10 rounded-xl bg-[#FDF6EC] flex items-center justify-center text-[#C17839]">
+                  <ShoppingBag size={20} />
+                </div>
+                Your Order
+              </h2>
 
-            {!razorpayLoaded && (
-              <p className="text-center text-[10px] text-gray-400 mt-3 flex items-center justify-center gap-1">
-                <Loader2 size={10} className="animate-spin" /> Fetching secure checkout...
-              </p>
-            )}
+              <div className="space-y-6 max-h-[350px] overflow-y-auto pr-2 scrollbar-hide mb-10 relative z-10">
+                {items.map((item) => (
+                  <div key={item.id} className="flex justify-between gap-6 group hover:translate-x-1 transition-transform">
+                    <div className="flex-1">
+                      <p className="font-bold text-[#3B1F0A] group-hover:text-[#C17839] transition-colors line-clamp-1">{item.productName}</p>
+                      <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest opacity-60">
+                        Qty: {item.quantity} × {formatCurrency(item.unitPrice)}
+                      </p>
+                    </div>
+                    <p className="font-serif font-black text-[#3B1F0A] whitespace-nowrap">
+                      {formatCurrency(Number(item.unitPrice) * item.quantity)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-4 pt-8 border-t border-[#FDF6EC] relative z-10">
+                <div className="flex justify-between text-[#8B5E3C] font-medium">
+                  <span className="text-sm">Subtotal</span>
+                  <span className="font-bold">{formatCurrency(subtotal)}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#FDF6EC] p-6 rounded-2xl border border-[#F5E6CC] mt-6 group overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#C17839]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="text-lg font-serif font-black text-[#3B1F0A] relative z-10">Amount to Pay</span>
+                  <span className="text-3xl font-serif font-black text-[#C17839] relative z-10">{formatCurrency(subtotal)}</span>
+                </div>
+              </div>
+
+              <Button 
+                onClick={handlePayment} 
+                size="xl"
+                className="w-full mt-10 h-16 rounded-[1.5rem] shadow-premium hover:shadow-[#C17839]/20 bg-[#C17839] hover:bg-[#3B1F0A] text-white border-none group transition-all active:scale-95 text-lg font-black"
+                loading={isProcessing}
+                disabled={!razorpayLoaded || isEmpty}
+              >
+                <CreditCard size={22} className="mr-3 group-hover:rotate-12 transition-transform" />
+                Proceed to Payment
+              </Button>
+
+              {!razorpayLoaded && (
+                <div className="mt-6 flex flex-col items-center gap-3 animate-pulse">
+                  <div className="flex items-center gap-2 text-[10px] text-[#A17C5F] font-black uppercase tracking-widest">
+                    <Loader2 size={12} className="animate-spin text-[#C17839]" /> 
+                    Initializing Secure Vault
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-8 flex items-center justify-center gap-3 opacity-40">
+                 <div className="h-[1px] flex-1 bg-[#8B5E3C]/20" />
+                 <Star size={10} className="text-[#8B5E3C]" />
+                 <div className="h-[1px] flex-1 bg-[#8B5E3C]/20" />
+              </div>
+            </div>
           </div>
         </div>
       </div>

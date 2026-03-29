@@ -18,19 +18,17 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: 'Waffle House | Premium Desserts & Waffles',
-  description: 'Handcrafted Belgian waffles baked to perfection. Order online for takeaway or delivery.',
+  description: 'Handcrafted Premium waffles baked to perfection. Order online for takeaway or delivery.',
+  keywords: ['waffles', 'dessert', 'chocolate', 'takeaway', 'delivery'],
   openGraph: {
-    title: 'Waffle House | Premium Desserts & Waffles',
-    description: 'Handcrafted Belgian waffles baked to perfection.',
-    url: 'https://wafflehouse.in',
-    siteName: 'Waffle House',
-    locale: 'en_IN',
-    type: 'website',
+    title: 'Waffle Wala - Har Bite Mein Happiness',
+    description: 'Handcrafted Premium waffles baked to perfection.',
+    images: ['/images/og-image.png'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Waffle House',
-    description: 'Handcrafted Belgian waffles baked to perfection.',
+    title: 'Waffle Wala - Har Bite Mein Happiness',
+    description: 'Handcrafted Premium waffles baked to perfection.',
   },
 };
 

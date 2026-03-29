@@ -1,96 +1,77 @@
-import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Star, ShoppingBag, Zap } from 'lucide-react';
+import { Star, ShieldCheck, Zap, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { PRODUCTS } from '@/data/products';
-import { Badge } from '@/components/ui/Badge';
+import { HeroExperience } from '@/components/ui/HeroExperience';
 
 export default function HomePage() {
   const featuredProducts = PRODUCTS.filter(p => p.is_featured).slice(0, 4);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-[#3B1F0A]">
-        {/* Background Pattern/Texture */}
-        <div className="absolute inset-0 opacity-20 pointer-events-none">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]" />
-        </div>
+    <div className="flex flex-col min-h-screen bg-[#FDF6EC]">
+      {/* 3D Premium Hero Showcase Architecture */}
+      <HeroExperience />
 
-        <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#C17839]/20 border border-[#C17839]/30 text-[#F0BC5E] text-xs font-bold uppercase tracking-widest mb-8 animate-fade-in shadow-xl backdrop-blur-md">
-            <Star size={14} className="fill-[#F0BC5E]" />
-            Premium Belgian Waffles
+      {/* Premium Trust Architecture Section */}
+      <section className="py-24 bg-white relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-[#F5E6CC] to-transparent" />
+        <div className="safe-container">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-16 lg:gap-12">
+            <div className="flex flex-col items-center text-center group cursor-default">
+              <div className="w-20 h-20 rounded-[2.5rem] bg-[#FDF6EC] flex items-center justify-center text-[#C17839] mb-8 transition-all duration-700 group-hover:bg-[#3B1F0A] group-hover:text-white group-hover:rotate-12 group-hover:scale-110 shadow-soft">
+                <Zap size={32} strokeWidth={1.5} />
+              </div>
+              <h3 className="font-serif text-lg font-bold text-[#3B1F0A] mb-3 tracking-tight transition-colors duration-500 group-hover:text-[#C17839]">Express Delivery</h3>
+              <p className="text-[10px] text-[#8B5E3C] font-black uppercase tracking-[0.2em] opacity-50">Hot & Fresh in 30 Min</p>
+            </div>
+
+            <div className="flex flex-col items-center text-center group cursor-default">
+              <div className="w-20 h-20 rounded-[2.5rem] bg-[#FDF6EC] flex items-center justify-center text-[#C17839] mb-8 transition-all duration-700 group-hover:bg-[#3B1F0A] group-hover:text-white group-hover:rotate-12 group-hover:scale-110 shadow-soft">
+                <Star size={32} strokeWidth={1.5} />
+              </div>
+              <h3 className="font-serif text-lg font-bold text-[#3B1F0A] mb-3 tracking-tight transition-colors duration-500 group-hover:text-[#C17839]">Premium Quality</h3>
+              <p className="text-[10px] text-[#8B5E3C] font-black uppercase tracking-[0.2em] opacity-50">Highest Graded Cocoa</p>
+            </div>
+
+            <div className="flex flex-col items-center text-center group cursor-default">
+              <div className="w-20 h-20 rounded-[2.5rem] bg-[#FDF6EC] flex items-center justify-center text-[#C17839] mb-8 transition-all duration-700 group-hover:bg-[#3B1F0A] group-hover:text-white group-hover:rotate-12 group-hover:scale-110 shadow-soft">
+                <ShieldCheck size={32} strokeWidth={1.5} />
+              </div>
+              <h3 className="font-serif text-lg font-bold text-[#3B1F0A] mb-3 tracking-tight transition-colors duration-500 group-hover:text-[#C17839]">Secure Payment</h3>
+              <p className="text-[10px] text-[#8B5E3C] font-black uppercase tracking-[0.2em] opacity-50">100% Encrypted Pay</p>
+            </div>
+
+            <div className="flex flex-col items-center text-center group cursor-default">
+              <div className="w-20 h-20 rounded-[2.5rem] bg-[#FDF6EC] flex items-center justify-center text-[#C17839] mb-8 transition-all duration-700 group-hover:bg-[#3B1F0A] group-hover:text-white group-hover:rotate-12 group-hover:scale-110 shadow-soft">
+                <span className="text-3xl font-serif font-black">V</span>
+              </div>
+              <h3 className="font-serif text-lg font-bold text-[#3B1F0A] mb-3 tracking-tight transition-colors duration-500 group-hover:text-[#C17839]">100% Vegetarian</h3>
+              <p className="text-[10px] text-[#8B5E3C] font-black uppercase tracking-[0.2em] opacity-50">Pure & Safe Indulgence</p>
+            </div>
           </div>
-          
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-white mb-6 leading-[1.1] animate-fade-in drop-shadow-2xl">
-            Waffle <span className="text-[#C17839]">Wala</span>
-          </h1>
-          
-          <p className="text-xl md:text-2xl text-[#FDF6EC]/90 mb-10 max-w-2xl mx-auto font-medium italic animate-fade-in" style={{ animationDelay: '100ms' }}>
-            "Har Bite Mein Happiness"
-          </p>
-
-          <p className="text-lg text-white/70 mb-12 max-w-2xl mx-auto font-light leading-relaxed animate-fade-in hidden md:block" style={{ animationDelay: '200ms' }}>
-            Experience the crunch of authentic Belgian waffles, drizzled with premium chocolate and topped with pure joy. Freshly baked, just for you.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in w-full max-w-md mx-auto" style={{ animationDelay: '300ms' }}>
-            <Link href="/menu" className="w-full sm:w-auto">
-              <Button size="xl" className="w-full sm:w-auto text-lg rounded-full px-12 bg-[#C17839] hover:bg-[#A8662D] text-white border-none shadow-2xl transition-all active:scale-95 flex items-center gap-2">
-                Order Now <ArrowRight size={20} />
-              </Button>
-            </Link>
-          </div>
         </div>
-
-        {/* Decorative elements */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FDF6EC] to-transparent z-0" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-[#F5E6CC] to-transparent" />
       </section>
 
-      {/* Trust Badges */}
-      <section className="py-12 bg-[#FDF6EC] border-b border-[#F5E6CC]">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="flex flex-col items-center text-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#C17839] border border-[#F5E6CC]">
-                <Zap size={28} />
-              </div>
-              <h3 className="font-bold text-[#3B1F0A] text-sm">Fast Delivery</h3>
+      {/* Featured Bestsellers Section Architecture */}
+      <section className="py-32 bg-[#FDF6EC] relative">
+        <div className="safe-container">
+          <div className="text-center mb-24 animate-fade-in">
+            <h2 className="text-5xl md:text-7xl lg:text-8xl font-serif font-black text-[#3B1F0A] mb-6 tracking-tighter">
+               Our <span className="text-[#C17839]">Bestsellers.</span>
+            </h2>
+            <div className="flex items-center justify-center gap-4 mb-10">
+               <div className="h-[1.5px] w-20 bg-gradient-to-r from-transparent to-[#C17839]" />
+               <Star size={18} className="fill-[#C17839] text-[#C17839] opacity-40" />
+               <div className="h-[1.5px] w-20 bg-gradient-to-l from-transparent to-[#C17839]" />
             </div>
-            <div className="flex flex-col items-center text-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#C17839] border border-[#F5E6CC]">
-                <Star size={28} />
-              </div>
-              <h3 className="font-bold text-[#3B1F0A] text-sm">Premium Quality</h3>
-            </div>
-            <div className="flex flex-col items-center text-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#C17839] border border-[#F5E6CC]">
-                <ShoppingBag size={28} />
-              </div>
-              <h3 className="font-bold text-[#3B1F0A] text-sm">Freshly Baked</h3>
-            </div>
-            <div className="flex flex-col items-center text-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#C17839] border border-[#F5E6CC]">
-                <span className="text-2xl font-bold">100%</span>
-              </div>
-              <h3 className="font-bold text-[#3B1F0A] text-sm">Vegetarian</h3>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Section */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-serif font-bold text-[#3B1F0A] mb-4">Our Bestsellers</h2>
-            <div className="w-24 h-1.5 bg-[#C17839] mx-auto rounded-full mb-6" />
-            <p className="text-[#8B5E3C] max-w-xl mx-auto">Discover the waffles that have won hearts across the city.</p>
+            <p className="text-[#8B5E3C] max-w-2xl mx-auto text-xl font-medium italic leading-relaxed opacity-80">
+              "A symphony of crunch and chocolate, crafted to perfection for your moments of pure joy."
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-14">
             {featuredProducts.map((product) => (
               <ProductCard
                 key={product.id}
@@ -99,29 +80,16 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="mt-20 text-center">
+          <div className="mt-24 text-center">
             <Link href="/menu">
-              <Button variant="outline" size="xl" className="rounded-full border-2 border-[#3B1F0A] text-[#3B1F0A] hover:bg-[#3B1F0A] hover:text-white px-12 font-bold transition-all">
-                Explore Full Menu
+              <Button size="xl" className="h-16 rounded-3xl px-16 bg-[#3B1F0A] hover:bg-black text-white shadow-premium hover:-translate-y-2 transition-all group active:scale-95 font-black uppercase tracking-widest text-[10px]">
+                Explore Gallery
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform ml-2" />
               </Button>
             </Link>
           </div>
         </div>
       </section>
-    </div>
-  );
-}
-
-function TestimonialCard({ text, author, rating }: { text: string, author: string, rating: number }) {
-  return (
-    <div className="bg-[#FDF6EC] p-8 rounded-3xl text-left shadow-sm border border-[#F5E6CC]">
-      <div className="flex gap-1 mb-6 text-[#E8A535]">
-        {[...Array(rating)].map((_, i) => (
-          <Star key={i} size={20} fill="currentColor" />
-        ))}
-      </div>
-      <p className="text-[#3B1F0A] italic mb-6 leading-relaxed">"{text}"</p>
-      <p className="font-semibold text-[#8B5E3C]">- {author}</p>
     </div>
   );
 }

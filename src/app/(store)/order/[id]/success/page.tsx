@@ -1,6 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
-import { CheckCircle2, ShoppingBag, Calendar, Phone, User, ArrowRight } from 'lucide-react';
+import { CheckCircle2, ShoppingBag, Calendar, Phone, User, ArrowRight, ShieldCheck, Zap, Star } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import Link from 'next/link';
@@ -24,105 +24,132 @@ export default async function SuccessPage({ params }: SuccessPageProps) {
     return notFound();
   }
 
-  // Ensure payment is verified (paid)
-  const isPaid = order.payment?.some((p: any) => p.status === 'paid') || order.status !== 'pending';
-
   return (
-    <div className="bg-[#FDF6EC] min-h-screen py-12 lg:py-20 animate-fade-in">
-      <div className="max-w-3xl mx-auto w-full px-4">
-        <div className="bg-white rounded-[3rem] p-8 lg:p-16 shadow-xl shadow-[#C17839]/5 border border-white text-center relative overflow-hidden">
+    <div className="bg-[#FDF6EC] min-h-screen py-20 lg:py-32 animate-fade-in relative overflow-hidden">
+      {/* Background Decorative Elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-[#C17839]/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#3B1F0A]/5 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
+
+      <div className="max-w-4xl mx-auto w-full px-4 relative z-10">
+        <div className="bg-white rounded-[3.5rem] p-10 lg:p-20 shadow-premium border border-white text-center relative overflow-hidden group">
           
           {/* Confetti-like accent */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-2 bg-gradient-to-r from-transparent via-[#C17839] to-transparent"></div>
+          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-transparent via-[#C17839] to-transparent opacity-30" />
           
-          <div className="w-24 h-24 bg-green-50 rounded-[2rem] flex items-center justify-center mx-auto mb-10 animate-bounce-subtle">
-            <CheckCircle2 className="text-green-500" size={48} />
+          <div className="relative mb-12 inline-block">
+            <div className="w-28 h-28 bg-[#FDF6EC] rounded-[2.5rem] flex items-center justify-center mx-auto shadow-soft group-hover:rotate-6 transition-transform duration-500">
+              <CheckCircle2 className="text-[#22C55E]" size={56} strokeWidth={1.5} />
+            </div>
+            <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#C17839] rounded-full flex items-center justify-center text-white shadow-lg animate-bounce">
+              <Star size={16} fill="currentColor" />
+            </div>
           </div>
 
-          <h1 className="text-4xl lg:text-5xl font-black text-gray-900 mb-6 tracking-tight">
-            Order Confirmed!
+          <h1 className="text-5xl lg:text-7xl font-serif font-black text-[#3B1F0A] mb-6 tracking-tighter">
+            Order <span className="text-[#C17839]">Received!</span>
           </h1>
-          <p className="text-gray-500 text-xl mb-12 max-w-lg mx-auto leading-relaxed">
-            Your payment was successful and we've started preparing your delicious waffles. Get ready for a treat!
+          <p className="text-[#8B5E3C] text-xl font-medium italic mb-16 max-w-2xl mx-auto leading-relaxed opacity-80">
+            "Your order has been sent to our kitchen. We're getting the batter ready to bake your moment of happiness!"
           </p>
 
-          <div className="bg-[#FDF6EC] rounded-[2.5rem] p-8 lg:p-10 text-left space-y-8 border border-[#F5E6CC] mb-12 shadow-inner">
-            <div className="flex flex-col sm:flex-row justify-between gap-6 border-b border-[#F5E6CC] pb-8">
+          <div className="bg-[#FDF6EC]/50 rounded-[3rem] p-10 lg:p-14 text-left border border-[#F5E6CC] mb-16 shadow-inner relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-5">
+              <ShoppingBag size={120} className="text-[#3B1F0A]" />
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-between gap-8 border-b border-[#F5E6CC] pb-10 relative z-10">
               <div>
-                <p className="text-xs font-black text-[#8B5E3C] uppercase tracking-[0.2em] mb-2">Order Number</p>
-                <p className="text-3xl font-black text-gray-900 tracking-tighter">{order.order_number}</p>
+                <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.3em] mb-3">Order Identifier</p>
+                <p className="text-4xl font-serif font-black text-[#3B1F0A] tracking-tighter">{order.order_number}</p>
               </div>
               <div className="sm:text-right">
-                <p className="text-xs font-black text-[#8B5E3C] uppercase tracking-[0.2em] mb-2">Status</p>
-                <span className="inline-flex items-center px-4 py-2 rounded-2xl text-xs font-black bg-white text-green-700 border-2 border-green-100 shadow-sm">
-                   PAID & CONFIRMED
-                </span>
+                <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.3em] mb-3">Confirmation Status</p>
+                <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white text-[#22C55E] text-xs font-black border border-[#22C55E]/20 shadow-soft">
+                  <div className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
+                  PAID & SECURED
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-gray-400 shadow-sm">
-                  <User size={20} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 mt-10 relative z-10">
+              <div className="flex items-start gap-5">
+                <div className="w-12 h-12 rounded-2xl bg-white border border-[#F5E6CC] flex items-center justify-center text-[#C17839] shadow-soft">
+                  <User size={22} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Customer</p>
-                  <p className="font-bold text-gray-800 text-lg">{order.customer_name}</p>
+                  <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mb-1 opacity-60">Customer Name</p>
+                  <p className="font-bold text-[#3B1F0A] text-lg">{order.customer_name}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-gray-400 shadow-sm">
-                  <Phone size={20} />
+              <div className="flex items-start gap-5">
+                <div className="w-12 h-12 rounded-2xl bg-white border border-[#F5E6CC] flex items-center justify-center text-[#C17839] shadow-soft">
+                  <Phone size={22} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone</p>
-                  <p className="font-bold text-gray-800 text-lg">{order.customer_phone}</p>
+                  <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mb-1 opacity-60">Mobile Contact</p>
+                  <p className="font-bold text-[#3B1F0A] text-lg">{order.customer_phone}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-gray-400 shadow-sm">
-                  <Calendar size={20} />
+              <div className="flex items-start gap-5">
+                <div className="w-12 h-12 rounded-2xl bg-white border border-[#F5E6CC] flex items-center justify-center text-[#C17839] shadow-soft">
+                  <Calendar size={22} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Order Date</p>
-                  <p className="font-bold text-gray-800 text-lg">
+                  <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mb-1 opacity-60">Transaction Time</p>
+                  <p className="font-bold text-[#3B1F0A] text-lg">
                     {format(new Date(order.created_at), 'dd MMM yyyy, p')}
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-gray-400 shadow-sm">
-                  <ShoppingBag size={20} />
+              <div className="flex items-start gap-5">
+                <div className="w-12 h-12 rounded-2xl bg-white border border-[#F5E6CC] flex items-center justify-center text-[#C17839] shadow-soft">
+                  <Zap size={22} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Items</p>
-                  <p className="font-bold text-gray-800 text-lg">{order.items?.length || 0} Delicious Waffles</p>
+                  <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mb-1 opacity-60">Deliverable</p>
+                  <p className="font-bold text-[#3B1F0A] text-lg">{order.items?.length || 0} Premium Creation(s)</p>
                 </div>
               </div>
             </div>
 
-            <div className="pt-8 border-t border-[#F5E6CC]">
-               <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] border-2 border-[#F5E6CC] shadow-sm">
-                 <span className="font-black text-gray-900 uppercase tracking-widest text-sm">Amount Paid</span>
-                 <span className="text-3xl font-black text-[#C17839]">{formatCurrency(order.total_amount)}</span>
+            <div className="pt-10 border-t border-[#F5E6CC] mt-10 relative z-10">
+               <div className="flex justify-between items-center bg-white p-8 rounded-[2.5rem] border border-[#F5E6CC] shadow-medium group">
+                 <div className="flex items-center gap-4">
+                    <ShieldCheck size={28} className="text-[#22C55E]" />
+                    <span className="font-black text-[#3B1F0A] uppercase tracking-[0.2em] text-sm">Grand Total Paid</span>
+                 </div>
+                 <span className="text-4xl font-serif font-black text-[#C17839]">{formatCurrency(order.total_amount)}</span>
                </div>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-5 justify-center">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center relative z-10">
              <Link 
                href={`/order/${order.id}/track`} 
-               className="inline-flex items-center justify-center gap-3 px-10 h-18 bg-[#C17839] text-white font-black text-lg rounded-[1.5rem] hover:bg-[#A8662D] transition-all shadow-xl shadow-[#C17839]/20 hover:shadow-[#C17839]/30 active:scale-[0.97]"
+               className="inline-flex items-center justify-center gap-4 px-12 h-20 bg-[#C17839] text-white font-black text-xl rounded-[2rem] hover:bg-[#3B1F0A] transition-all shadow-premium hover:shadow-[#C17839]/20 active:scale-[0.97] group"
              >
-               Track Your Order
-               <ArrowRight size={24} />
+               Track Live Status
+               <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
              </Link>
              <Link 
                href="/menu" 
-               className="inline-flex items-center justify-center gap-3 px-10 h-18 bg-white text-gray-800 font-bold text-lg rounded-[1.5rem] border-2 border-gray-100 hover:border-[#C17839] hover:text-[#C17839] transition-all active:scale-[0.97]"
+               className="inline-flex items-center justify-center gap-4 px-12 h-20 bg-white text-[#3B1F0A] font-bold text-xl rounded-[2rem] border border-[#F5E6CC] hover:bg-[#FDF6EC] transition-all active:scale-[0.97]"
              >
                Order More
              </Link>
+          </div>
+
+          {/* Trust Micro-strip */}
+          <div className="mt-20 pt-12 border-t border-[#FDF6EC] flex flex-wrap justify-center gap-12 opacity-40">
+             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                <ShieldCheck size={14} /> Encrypted Payment
+             </div>
+             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                <Zap size={14} /> Instant Confirmation
+             </div>
+             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                <Star size={14} /> Quality Guaranteed
+             </div>
           </div>
 
         </div>
