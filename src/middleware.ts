@@ -3,10 +3,10 @@ import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
 /**
- * Next.js 16 Proxy (formerly Middleware) logic.
+ * Next.js 16 Middleware logic.
  * Lightweight route protection and redirection.
  */
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -56,9 +56,6 @@ export async function proxy(request: NextRequest) {
       url.searchParams.set('returnTo', request.nextUrl.pathname);
       return NextResponse.redirect(url);
     }
-
-    // 3. Optional: Role check could happen here, but better done in Server Components/APIs
-    // to keep proxy logic extremely lightweight as per requirements.
   }
 
   // API protection for /api/admin
