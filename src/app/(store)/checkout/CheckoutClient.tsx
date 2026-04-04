@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 export function CheckoutClient({ branch }: { branch: any }) {
   const router = useRouter();
   const { items, removeItem, updateQuantity, subtotal, couponDiscount } = useCartStore();
-  
+
   const [step, setStep] = useState<1 | 2>(1);
   const [loading, setLoading] = useState(false);
   const [pincode, setPincode] = useState('');
@@ -22,10 +22,10 @@ export function CheckoutClient({ branch }: { branch: any }) {
 
   // Re-compute cart if tax settings are available
   const summary = computeCartTotals(
-    subtotal, 
-    couponDiscount, 
-    deliveryFee, 
-    branch?.tax_percentage || 0, 
+    subtotal,
+    couponDiscount,
+    deliveryFee,
+    branch?.tax_percentage || 0,
     branch?.prices_include_tax || false
   );
 
@@ -55,13 +55,13 @@ export function CheckoutClient({ branch }: { branch: any }) {
       toast.error('Please enter a valid 6-digit pincode');
       return;
     }
-    
+
     setLoading(true);
     try {
       // Direct DB call or API call for pincode check (Mocked for UI flow, assuming API exists soon)
       const res = await fetch(`/api/delivery-zones/check?pincode=${pincode}&branch_id=${branch?.id}`);
       const data = await res.json();
-      
+
       if (res.ok && data.is_active) {
         setIsServiceable(true);
         setDeliveryFee(data.delivery_fee);
@@ -84,7 +84,7 @@ export function CheckoutClient({ branch }: { branch: any }) {
       toast.error('Please verify serviceability of your pincode first.');
       return;
     }
-    
+
     setLoading(true);
     try {
       // 1. Create order on server
@@ -93,12 +93,12 @@ export function CheckoutClient({ branch }: { branch: any }) {
         branch_id: branch?.id,
         items,
         shipping_address: {
-           fullName: formData.get('fullName'),
-           phone: formData.get('phone'),
-           addressLine1: formData.get('address'),
-           city: formData.get('city'),
-           state: formData.get('state'),
-           pincode: pincode,
+          fullName: formData.get('fullName'),
+          phone: formData.get('phone'),
+          addressLine1: formData.get('address'),
+          city: formData.get('city'),
+          state: formData.get('state'),
+          pincode: pincode,
         },
         order_type: 'delivery',
       };
@@ -133,9 +133,9 @@ export function CheckoutClient({ branch }: { branch: any }) {
                 internal_order_id: data.order.id
               })
             });
-            
+
             if (!verifyRes.ok) throw new Error('Payment verification failed');
-            
+
             // Clear cart and redirect
             useCartStore.getState().clearCart();
             router.push(`/order/success?order_number=${data.order.order_number}`);
@@ -155,7 +155,7 @@ export function CheckoutClient({ branch }: { branch: any }) {
 
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any) {
-         toast.error(response.error.description);
+        toast.error(response.error.description);
       });
       rzp.open();
 
@@ -170,14 +170,14 @@ export function CheckoutClient({ branch }: { branch: any }) {
     <div className="flex flex-col lg:flex-row gap-8 animate-fade-in" style={{ animationDelay: '100ms' }}>
       {/* Left Column - Forms */}
       <div className="flex-1 space-y-6">
-        
+
         {/* Step 1: Pincode Check */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E5D5C0]">
           <h2 className="text-xl font-serif font-semibold text-[#3B1F0A] mb-4">1. Delivery Check</h2>
           <div className="flex gap-2">
-            <Input 
-              type="text" 
-              placeholder="Enter 6-digit Pincode" 
+            <Input
+              type="text"
+              placeholder="Enter 6-digit Pincode"
               maxLength={6}
               value={pincode}
               onChange={(e) => {
@@ -202,33 +202,33 @@ export function CheckoutClient({ branch }: { branch: any }) {
         {/* Step 2: Address Form */}
         <div className={`transition-opacity duration-300 ${isServiceable ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E5D5C0]">
-             <h2 className="text-xl font-serif font-semibold text-[#3B1F0A] mb-4">2. Delivery Details</h2>
-             <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-[#8B5E3C] mb-1">Full Name</label>
-                    <Input name="fullName" required placeholder="John Doe" />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-[#8B5E3C] mb-1">Phone Number</label>
-                    <Input name="phone" required placeholder="9876543210" pattern="[0-9]{10}" title="10 digit phone number" />
-                  </div>
+            <h2 className="text-xl font-serif font-semibold text-[#3B1F0A] mb-4">2. Delivery Details</h2>
+            <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-[#8B5E3C] mb-1">Full Name</label>
+                  <Input name="fullName" required placeholder="John Doe" />
                 </div>
                 <div>
-                  <label className="block text-sm text-[#8B5E3C] mb-1">Detailed Address (House No, Building, Street)</label>
-                  <Input name="address" required placeholder="Flat 101, Waffle Tower" />
+                  <label className="block text-sm text-[#8B5E3C] mb-1">Phone Number</label>
+                  <Input name="phone" required placeholder="9876543210" pattern="[0-9]{10}" title="10 digit phone number" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-[#8B5E3C] mb-1">City</label>
-                    <Input name="city" required placeholder="Bengaluru" defaultValue="Bengaluru" />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-[#8B5E3C] mb-1">State</label>
-                    <Input name="state" required placeholder="Karnataka" defaultValue="Karnataka" />
-                  </div>
+              </div>
+              <div>
+                <label className="block text-sm text-[#8B5E3C] mb-1">Detailed Address (House No, Building, Street)</label>
+                <Input name="address" required placeholder="Flat 101, Waffle Tower" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-[#8B5E3C] mb-1">City</label>
+                  <Input name="city" required placeholder="Bengaluru" defaultValue="Bengaluru" />
                 </div>
-             </form>
+                <div>
+                  <label className="block text-sm text-[#8B5E3C] mb-1">State</label>
+                  <Input name="state" required placeholder="Karnataka" defaultValue="Karnataka" />
+                </div>
+              </div>
+            </form>
           </div>
         </div>
 
@@ -245,7 +245,7 @@ export function CheckoutClient({ branch }: { branch: any }) {
             {items.map((item) => (
               <div key={item.id} className="flex justify-between text-sm py-2">
                 <div className="flex-1">
-                  <span className="font-semibold text-[#3B1F0A]">{item.quantity}x </span> 
+                  <span className="font-semibold text-[#3B1F0A]">{item.quantity}x </span>
                   <span className="text-[#3B1F0A]">Product ID: {item.productId} {/* Needs active JOIN if full product obj not saved. In full implementation, we save product title in Zustand */}</span>
                   {item.toppings?.length > 0 && (
                     <p className="text-xs text-[#8B5E3C] mt-1 pl-6">
@@ -282,11 +282,11 @@ export function CheckoutClient({ branch }: { branch: any }) {
             </div>
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             form="checkout-form"
-            variant="primary" 
-            size="xl" 
+            variant="primary"
+            size="xl"
             className="w-full"
             loading={loading}
             disabled={!isServiceable || items.length === 0}

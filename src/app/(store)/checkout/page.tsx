@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ShoppingBag, ArrowLeft, ShieldCheck, Phone, User, CreditCard, Loader2, Star } from 'lucide-react';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -25,6 +26,30 @@ export default function CheckoutPage() {
   const isEmpty = items.length === 0;
 
   useEffect(() => {
+    // Fetch user profile to prefill
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setFormData(prev => ({
+          ...prev,
+          name: user.user_metadata?.full_name || prev.name,
+          phone: user.phone ? user.phone.replace('+91', '') : prev.phone
+        }));
+
+        // Try syncing from customers table
+        const { data: cust } = await supabase.from('customers').select('name, phone').eq('auth_user_id', user.id).single();
+        if (cust) {
+           setFormData(prev => ({
+              ...prev,
+              name: cust.name || prev.name,
+              phone: cust.phone ? cust.phone.replace('+91', '') : prev.phone
+           }));
+        }
+      }
+    };
+    fetchUser();
+
     // Check if script is already loaded
     if ((window as any).Razorpay) {
       setRazorpayLoaded(true);
@@ -57,6 +82,17 @@ export default function CheckoutPage() {
     setIsProcessing(true);
 
     try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast.info('Please login to complete your order.');
+        const redirectUrl = new URL(window.location.href);
+        const loginUrl = `/login?redirect=${encodeURIComponent(redirectUrl.pathname + redirectUrl.search)}`;
+        router.push(loginUrl);
+        return;
+      }
+
       const res = await fetch('/api/payments/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

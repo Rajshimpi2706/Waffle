@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase/server';
+import { createServiceClient, createClient } from '@/lib/supabase/server';
 import { createRazorpayOrder } from '@/lib/razorpay';
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createServiceClient();
     const payload = await request.json();
-
     const { 
       customer_name, 
       customer_phone, 
@@ -20,6 +18,20 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // 1b. Enforce Authentication (Use anon client to verify session from cookies)
+    const anonSupabase = await createClient();
+    const { data: { user }, error: authError } = await anonSupabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized: You must be logged in to place an order.' },
+        { status: 401 }
+      );
+    }
+
+    // Continue with service client for DB operations (bypass RLS)
+    const supabase = await createServiceClient();
 
     // 2. Fetch current prices from DB (Zero-Trust Pricing)
     const productIds = items.map((i: any) => i.productId);
@@ -72,6 +84,39 @@ export async function POST(request: Request) {
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const orderNumber = `WW-${today}-${randomSuffix}`;
 
+    // 4b. Sync/Find Customer Profile for Identity Consistency
+    let customerId = null;
+    if (user) {
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+        
+      if (customer) {
+        customerId = customer.id;
+      } else {
+        // Use a fallback for required NOT NULL fields in customers table
+        const fallbackName = customer_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Unknown Customer';
+        const fallbackPhone = customer_phone || user.phone || '0000000000';
+
+        const { data: newCustomer, error: createCustError } = await supabase
+          .from('customers')
+          .insert({
+            auth_user_id: user.id,
+            phone: fallbackPhone,
+            full_name: fallbackName,
+          })
+          .select('id')
+          .single();
+        
+        if (createCustError) {
+          console.warn('Could not sync customer profile:', createCustError.message);
+        }
+        if (newCustomer) customerId = newCustomer.id;
+      }
+    }
+
     // 5. Create Local Order (Status: pending)
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -81,19 +126,29 @@ export async function POST(request: Request) {
         customer_phone,
         subtotal: calculatedSubtotal,
         status: 'pending',
+        customer_id: customerId
       })
       .select()
       .single();
 
     if (orderError || !order) {
       const isRlsError = (orderError as any)?.code === '42501';
-      console.error('Error creating local order:', orderError);
+      const isColumnError = (orderError as any)?.code === '42703';
+      
+      console.error('Error creating local order:', {
+        code: (orderError as any)?.code,
+        message: orderError?.message,
+        details: (orderError as any)?.details,
+        hint: (orderError as any)?.hint
+      });
       
       return NextResponse.json({ 
-        error: isRlsError ? 'Permission Denied (RLS)' : 'Failed to create local order', 
+        error: isRlsError ? 'Permission Denied (RLS)' : (isColumnError ? 'Database Schema Mismatch' : 'Failed to create local order'), 
         suggestion: isRlsError 
-          ? 'ACTION REQUIRED: Your database is blocking this order. Copy the SQL from fix_rls.sql and run it in your Supabase SQL Editor.' 
-          : `Database error: ${orderError?.message || 'Check your Supabase permissions.'}` 
+          ? 'ACTION REQUIRED: Your database is blocking this order. Run the RLS fix script in Supabase.' 
+          : (isColumnError 
+              ? 'ACTION REQUIRED: Your orders table is missing the customer_id column. Please add it in Supabase.'
+              : `Database error: ${orderError?.message || 'Check your Supabase permissions.'}`)
       }, { status: 500 });
     }
 

@@ -17,6 +17,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
   title: 'Waffle House | Premium Desserts & Waffles',
   description: 'Handcrafted Premium waffles baked to perfection. Order online for takeaway or delivery.',
   keywords: ['waffles', 'dessert', 'chocolate', 'takeaway', 'delivery'],
@@ -38,7 +39,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn('h-full scroll-smooth', inter.variable, playfair.variable)}>
+    <html lang="en" data-scroll-behavior="smooth" className={cn('h-full scroll-smooth', inter.variable, playfair.variable)}>
       <body className="min-h-full flex flex-col font-sans antialiased text-[#3B1F0A] bg-[#FDF6EC]">
         {children}
         <ReactToastProvider />

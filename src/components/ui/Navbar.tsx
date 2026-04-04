@@ -12,6 +12,7 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const cartItemCount = useCartStore((state) => state.itemCount);
   const pathname = usePathname();
 
@@ -44,7 +45,18 @@ export function Navbar() {
   const navLinks = [
     { name: 'Home', href: '/' },
     { name: 'Menu', href: '/menu' },
+    { name: 'About', href: '/about' },
+    { name: 'Contact', href: '/contact' },
   ];
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setUser(null);
+    setIsLoggingOut(false);
+    window.location.reload();
+  };
 
   return (
     <>
@@ -84,7 +96,25 @@ export function Navbar() {
             </nav>
 
             {/* Premium Actions Architecture */}
-            <div className="flex items-center gap-2 md:gap-6">
+            <div className="flex items-center gap-2 md:gap-4">
+              {/* User Identity Toggle */}
+              {user ? (
+                <Link 
+                  href="/account"
+                  className="hidden md:flex relative px-4 py-2.5 bg-[#FDF6EC] text-[#3B1F0A] hover:bg-[#C17839] hover:text-white rounded-2xl transition-all duration-500 group/user items-center justify-center font-bold text-xs uppercase tracking-widest gap-2"
+                >
+                  <User size={16} />
+                  Profile
+                </Link>
+              ) : (
+                <Link 
+                  href="/login"
+                  className="hidden md:flex relative px-6 py-2.5 bg-[#3B1F0A] text-white hover:bg-black rounded-2xl transition-all duration-500 group/login items-center justify-center font-bold text-xs uppercase tracking-widest"
+                >
+                  Login
+                </Link>
+              )}
+
               {/* Cart Toggle */}
               <button 
                 onClick={() => document.dispatchEvent(new CustomEvent('open-cart'))}
