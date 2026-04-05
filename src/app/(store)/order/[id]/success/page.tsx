@@ -1,9 +1,10 @@
 import { createServiceClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
-import { CheckCircle2, ShoppingBag, Calendar, Phone, User, ArrowRight, ShieldCheck, Zap, Star } from 'lucide-react';
+import { CheckCircle2, ShoppingBag, Calendar, Phone, ArrowRight, ShieldCheck, Zap, Star, Coffee, Package } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import { OrderStatusBadge } from '@/components/ui/OrderStatusBadge';
 
 interface SuccessPageProps {
   params: Promise<{ id: string }>;
@@ -24,140 +25,120 @@ export default async function SuccessPage({ params }: SuccessPageProps) {
     return notFound();
   }
 
-  return (
-    <div className="bg-[#FDF6EC] min-h-screen py-20 lg:py-32 animate-fade-in relative overflow-hidden">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-[#C17839]/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#3B1F0A]/5 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
+  const itemsCount = order.items?.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0) || 0;
+  
+  const paymentData: any = order.payment;
+  const paymentStatus = (Array.isArray(paymentData) ? paymentData[0]?.status : paymentData?.status) || 'paid';
+  
+  const totalSafe = order.total_amount ?? order.subtotal ?? 0;
 
-      <div className="max-w-4xl mx-auto w-full px-4 relative z-10">
-        <div className="bg-white rounded-[3.5rem] p-10 lg:p-20 shadow-premium border border-white text-center relative overflow-hidden group">
-          
-          {/* Confetti-like accent */}
-          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-transparent via-[#C17839] to-transparent opacity-30" />
-          
-          <div className="relative mb-12 inline-block">
-            <div className="w-28 h-28 bg-[#FDF6EC] rounded-[2.5rem] flex items-center justify-center mx-auto shadow-soft group-hover:rotate-6 transition-transform duration-500">
-              <CheckCircle2 className="text-[#22C55E]" size={56} strokeWidth={1.5} />
-            </div>
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#C17839] rounded-full flex items-center justify-center text-white shadow-lg animate-bounce">
-              <Star size={16} fill="currentColor" />
-            </div>
+  return (
+    <div className="bg-[#FDF6EC] min-h-screen py-16 lg:py-24 animate-fade-in relative overflow-hidden">
+      {/* Decorative Blur Backgrounds */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#C17839]/10 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#3B1F0A]/5 rounded-full blur-3xl -translate-x-1/3 translate-y-1/3 pointer-events-none" />
+
+      <div className="max-w-3xl mx-auto w-full px-4 relative z-10 flex flex-col items-center">
+        
+        {/* Core Success Animation / Hero */}
+        <div className="relative mb-8 mt-4 group">
+          <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-full flex items-center justify-center shadow-premium group-hover:scale-105 transition-transform duration-700 animate-slide-up">
+            <CheckCircle2 className="text-[#22C55E]" size={64} strokeWidth={2} />
+          </div>
+          {/* Subtle confetti elements */}
+          <div className="absolute -top-4 -right-4 w-10 h-10 bg-[#FDF6EC] rounded-full flex items-center justify-center text-[#C17839] shadow-soft animate-bounce delay-100 border border-[#F5E6CC]">
+            <Star size={18} fill="currentColor" />
+          </div>
+          <div className="absolute -bottom-2 -left-2 w-8 h-8 bg-[#3B1F0A] rounded-full flex items-center justify-center text-white shadow-soft animate-bounce delay-300">
+            <Coffee size={14} />
+          </div>
+        </div>
+
+        <div className="text-center mb-12 animate-slide-up" style={{ animationDelay: '100ms' }}>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-black text-[#3B1F0A] mb-4 tracking-tighter">
+            🎉 Order Confirmed!
+          </h1>
+          <p className="text-[#8B5E3C] text-lg sm:text-xl font-medium italic max-w-lg mx-auto opacity-80 leading-relaxed px-4">
+            "Your waffle is being prepared with love ❤️"
+          </p>
+        </div>
+
+        {/* Compact Order Summary Card */}
+        <div className="w-full bg-white rounded-[2.5rem] shadow-premium border border-[#F5E6CC] overflow-hidden mb-12 animate-slide-up" style={{ animationDelay: '200ms' }}>
+          {/* Header Row */}
+          <div className="bg-[#FDF6EC]/40 p-6 sm:p-8 flex items-center justify-between border-b border-[#F5E6CC]">
+             <div>
+               <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.2em] mb-1">Protocol Identifier</p>
+               <p className="text-lg sm:text-2xl font-serif font-black text-[#3B1F0A]">{order.order_number}</p>
+             </div>
+             <div className="text-right">
+               <OrderStatusBadge status={order.status as any} />
+             </div>
           </div>
 
-          <h1 className="text-5xl lg:text-7xl font-serif font-black text-[#3B1F0A] mb-6 tracking-tighter">
-            Order <span className="text-[#C17839]">Received!</span>
-          </h1>
-          <p className="text-[#8B5E3C] text-xl font-medium italic mb-16 max-w-2xl mx-auto leading-relaxed opacity-80">
-            "Your order has been sent to our kitchen. We're getting the batter ready to bake your moment of happiness!"
-          </p>
-
-          <div className="bg-[#FDF6EC]/50 rounded-[3rem] p-10 lg:p-14 text-left border border-[#F5E6CC] mb-16 shadow-inner relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8 opacity-5">
-              <ShoppingBag size={120} className="text-[#3B1F0A]" />
-            </div>
-
-            <div className="flex flex-col sm:flex-row justify-between gap-8 border-b border-[#F5E6CC] pb-10 relative z-10">
-              <div>
-                <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.3em] mb-3">Order Identifier</p>
-                <p className="text-4xl font-serif font-black text-[#3B1F0A] tracking-tighter">{order.order_number}</p>
-              </div>
-              <div className="sm:text-right">
-                <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.3em] mb-3">Confirmation Status</p>
-                <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white text-[#22C55E] text-xs font-black border border-[#22C55E]/20 shadow-soft">
-                  <div className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
-                  PAID & SECURED
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 mt-10 relative z-10">
-              <div className="flex items-start gap-5">
-                <div className="w-12 h-12 rounded-2xl bg-white border border-[#F5E6CC] flex items-center justify-center text-[#C17839] shadow-soft">
-                  <User size={22} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mb-1 opacity-60">Customer Name</p>
-                  <p className="font-bold text-[#3B1F0A] text-lg">{order.customer_name}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-5">
-                <div className="w-12 h-12 rounded-2xl bg-white border border-[#F5E6CC] flex items-center justify-center text-[#C17839] shadow-soft">
-                  <Phone size={22} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mb-1 opacity-60">Mobile Contact</p>
-                  <p className="font-bold text-[#3B1F0A] text-lg">{order.customer_phone}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-5">
-                <div className="w-12 h-12 rounded-2xl bg-white border border-[#F5E6CC] flex items-center justify-center text-[#C17839] shadow-soft">
-                  <Calendar size={22} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mb-1 opacity-60">Transaction Time</p>
-                  <p className="font-bold text-[#3B1F0A] text-lg">
-                    {format(new Date(order.created_at), 'dd MMM yyyy, p')}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-5">
-                <div className="w-12 h-12 rounded-2xl bg-white border border-[#F5E6CC] flex items-center justify-center text-[#C17839] shadow-soft">
-                  <Zap size={22} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mb-1 opacity-60">Deliverable</p>
-                  <p className="font-bold text-[#3B1F0A] text-lg">{order.items?.length || 0} Premium Creation(s)</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-10 border-t border-[#F5E6CC] mt-10 relative z-10">
-               <div className="flex justify-between items-center bg-white p-8 rounded-[2.5rem] border border-[#F5E6CC] shadow-medium group">
-                 <div className="flex items-center gap-4">
-                    <ShieldCheck size={28} className="text-[#22C55E]" />
-                    <span className="font-black text-[#3B1F0A] uppercase tracking-[0.2em] text-sm">Grand Total Paid</span>
-                 </div>
-                 {/* Null-safe: fall back to subtotal if total_amount is missing (pre-B2-fix orders) */}
-                 <span className="text-4xl font-serif font-black text-[#C17839]">
-                   {formatCurrency(order.total_amount ?? order.subtotal ?? 0)}
-                 </span>
+          <div className="p-6 sm:p-10">
+            <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+               <div>
+                  <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mb-2 opacity-70">Amount Paid</p>
+                  <p className="text-2xl font-serif font-black text-[#C17839]">{formatCurrency(totalSafe)}</p>
+               </div>
+               <div>
+                  <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mb-2 opacity-70">Payment State</p>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-bold border border-green-200 capitalize">
+                    <CheckCircle2 size={12} />
+                    {paymentStatus}
+                  </div>
+               </div>
+               <div>
+                  <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mb-2 opacity-70">Items</p>
+                  <div className="flex items-center gap-2 text-[#3B1F0A] font-bold">
+                    <Package size={16} className="text-[#C17839]" />
+                    {itemsCount} {itemsCount === 1 ? 'Waffle' : 'Waffles'}
+                  </div>
+               </div>
+               <div>
+                  <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mb-2 opacity-70">Time Placed</p>
+                  <div className="flex items-center gap-2 text-[#3B1F0A] font-bold text-sm">
+                    <Calendar size={14} className="text-[#C17839]" />
+                    {order.created_at ? format(new Date(order.created_at), 'p') : 'Just now'}
+                  </div>
                </div>
             </div>
-
           </div>
-
-          <div className="flex flex-col sm:flex-row gap-6 justify-center relative z-10">
-             <Link 
-               href={`/order/${order.id}/track`} 
-               className="inline-flex items-center justify-center gap-4 px-12 h-20 bg-[#C17839] text-white font-black text-xl rounded-[2rem] hover:bg-[#3B1F0A] transition-all shadow-premium hover:shadow-[#C17839]/20 active:scale-[0.97] group"
-             >
-               Track Live Status
-               <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
-             </Link>
-             <Link 
-               href="/menu" 
-               className="inline-flex items-center justify-center gap-4 px-12 h-20 bg-white text-[#3B1F0A] font-bold text-xl rounded-[2rem] border border-[#F5E6CC] hover:bg-[#FDF6EC] transition-all active:scale-[0.97]"
-             >
-               Order More
-             </Link>
-          </div>
-
-          {/* Trust Micro-strip */}
-          <div className="mt-20 pt-12 border-t border-[#FDF6EC] flex flex-wrap justify-center gap-12 opacity-40">
-             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-                <ShieldCheck size={14} /> Encrypted Payment
-             </div>
-             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-                <Zap size={14} /> Instant Confirmation
-             </div>
-             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-                <Star size={14} /> Quality Guaranteed
-             </div>
-          </div>
-
         </div>
+
+        {/* Primary & Secondary Actions */}
+        <div className="flex flex-col w-full sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: '300ms' }}>
+          <Link 
+            href={`/order/${order.id}/track`} 
+            className="flex-1 sm:flex-none flex items-center justify-center gap-3 px-10 h-16 bg-[#C17839] text-white font-black text-lg rounded-[1.5rem] hover:bg-[#A8662D] hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all w-full sm:w-auto"
+          >
+            Track Your Order
+            <ArrowRight size={20} />
+          </Link>
+          <Link 
+            href="/menu" 
+            className="flex-1 sm:flex-none flex items-center justify-center gap-3 px-10 h-16 bg-white text-[#3B1F0A] font-black text-lg rounded-[1.5rem] border-2 border-[#F5E6CC] hover:bg-[#FDF6EC] hover:shadow-soft active:scale-95 transition-all w-full sm:w-auto"
+          >
+            Order More
+          </Link>
+        </div>
+
+        {/* Trust Flags */}
+        <div className="mt-16 pt-8 border-t border-[#E8D1B3] flex flex-wrap justify-center gap-8 w-full max-w-sm sm:max-w-none opacity-60 animate-fade-in" style={{ animationDelay: '400ms' }}>
+           <div className="flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#8B5E3C]">
+              <ShieldCheck size={16} /> Secure Payment
+           </div>
+           <div className="flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#8B5E3C]">
+              <Zap size={16} /> Fast Delivery
+           </div>
+           <div className="flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-[#8B5E3C]">
+              <Star size={16} /> Freshly Made
+           </div>
+        </div>
+
       </div>
     </div>
   );
 }
+
