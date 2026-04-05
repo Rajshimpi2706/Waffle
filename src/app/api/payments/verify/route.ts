@@ -80,50 +80,67 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid payment signature. Verification failed.' }, { status: 400 });
     }
 
-    // 4. ATOMIC UPDATE: Update Payment and then Order Status
+    // 4. UPDATE: Required fields first (status + IDs), timestamps separately
+    // HARDENING: Split into two steps so a missing column (e.g. paid_at) in the
+    // schema does NOT block the core status update. Without this, a schema mismatch
+    // causes the entire verify to fail even though payment was captured by Razorpay.
     console.log(`[Verify] Signature valid. Updating DB status for Order: ${local_order_id}`);
 
-    // Update Payment record
-    const { error: paymentUpdateError } = await supabase
+    // Step A: Core payment fields — must succeed
+    const { error: paymentCoreError } = await supabase
       .from('payments')
       .update({
         status: 'paid',
         razorpay_payment_id,
         razorpay_signature,
-        paid_at: new Date().toISOString(),
       })
       .eq('id', existingPayment.id);
 
-    if (paymentUpdateError) {
-      console.error('[Verify] Failed to update payment status:', paymentUpdateError);
+    if (paymentCoreError) {
+      console.error('[Verify] CRITICAL: Failed to update payment core status:', paymentCoreError);
       return NextResponse.json({ 
         success: false, 
         error: 'Database update failed', 
-        details: paymentUpdateError.message 
+        details: paymentCoreError.message 
       }, { status: 500 });
     }
 
-    // Update Order record
-    const { error: orderUpdateError } = await supabase
+    // Step B: Optional timestamp — non-blocking (column may not exist in older schemas)
+    const now = new Date().toISOString();
+    const { error: paidAtError } = await supabase
+      .from('payments')
+      .update({ paid_at: now })
+      .eq('id', existingPayment.id);
+    if (paidAtError) {
+      // Non-fatal: log and continue. Run the SQL migration to add paid_at column.
+      console.warn('[Verify] paid_at update skipped (column may be missing from schema):', paidAtError.message);
+    }
+
+    // Step C: Core order fields — must succeed
+    const { error: orderCoreError } = await supabase
       .from('orders')
-      .update({ 
-        status: 'confirmed',
-        confirmed_at: new Date().toISOString() // Ensure Phase 4 timestamp is set
-      })
+      .update({ status: 'confirmed' })
       .eq('id', local_order_id);
 
-    if (orderUpdateError) {
-      console.error('[Verify] Payment updated but failed to update order status:', orderUpdateError);
-      // NOTE: This is a critical partial-success state. 
-      // The payment is recorded as paid, but the order is still 'pending'.
+    if (orderCoreError) {
+      console.error('[Verify] Payment marked paid but order status update failed:', orderCoreError);
       return NextResponse.json({ 
         success: false, 
         error: 'Payment recorded but order confirmation failed',
-        details: orderUpdateError.message
+        details: orderCoreError.message
       }, { status: 500 });
     }
 
-    console.log(`[Verify] SUCCESS: Order ${local_order_id} confirmed.`);
+    // Step D: Optional order timestamp — non-blocking
+    const { error: confirmedAtError } = await supabase
+      .from('orders')
+      .update({ confirmed_at: now })
+      .eq('id', local_order_id);
+    if (confirmedAtError) {
+      console.warn('[Verify] confirmed_at update skipped (column may be missing from schema):', confirmedAtError.message);
+    }
+
+    console.log(`[Verify] SUCCESS: Order ${local_order_id} confirmed, payment paid.`);
     return NextResponse.json({
       success: true,
       message: 'Payment verified and order confirmed',
