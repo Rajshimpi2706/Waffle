@@ -3,11 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Order } from '@/types';
 import { OrderTimeline } from '@/components/ui/OrderTimeline';
-import { ShoppingBag, Calendar, Receipt, Phone, ArrowLeft, RefreshCcw, Star, ShieldCheck, Zap, Download, FileText, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Map as MapIcon, Layers, Maximize, User, MapPin, Phone, MessageSquare, Download, CheckCircle2, Bike } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
-import { OrderStatusBadge } from '@/components/ui/OrderStatusBadge';
 
 interface TrackClientProps {
   initialOrder: Order;
@@ -17,7 +16,6 @@ interface TrackClientProps {
 export function TrackClient({ initialOrder, phoneLast4 }: TrackClientProps) {
   const [order, setOrder] = useState<Order>(initialOrder);
   const [isPolling, setIsPolling] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   const fetchLatestStatus = useCallback(async () => {
     try {
@@ -28,7 +26,6 @@ export function TrackClient({ initialOrder, phoneLast4 }: TrackClientProps) {
         const result = await res.json();
         if (result.data) {
           setOrder(result.data);
-          setLastUpdated(new Date());
         }
       }
     } catch (err) {
@@ -47,196 +44,232 @@ export function TrackClient({ initialOrder, phoneLast4 }: TrackClientProps) {
     window.print();
   };
 
-  const paymentData: any = order.payment;
-  const paymentProvider = (Array.isArray(paymentData) ? paymentData[0]?.provider : paymentData?.provider) || 'Online Payment';
   const totalSafe = order.total_amount ?? order.subtotal ?? 0;
   const itemsSafe = order.items || [];
+  const firstItem = itemsSafe[0];
   const placedTime = order.created_at ? format(new Date(order.created_at), 'dd MMM, p') : 'Processing...';
 
   return (
-    <div className="bg-[#FDF6EC] min-h-screen print:bg-white print:min-h-0">
+    <div className="bg-[#FDF6EC] min-h-screen text-[#3B1F0A] font-sans print:bg-white print:min-h-0">
       
-      {/* Print Only Header (Hidden on screen) */}
+      {/* Print Only Header */}
       <div className="hidden print:block text-center mb-8 pb-6 border-b-2 border-black border-dashed">
          <h1 className="text-4xl font-serif font-black text-black">Waffle Wala</h1>
          <p className="font-bold uppercase tracking-widest mt-2">{order.order_number}</p>
          <p className="text-sm mt-1">{placedTime}</p>
       </div>
 
-      <div className="max-w-6xl mx-auto w-full px-4 py-8 lg:py-16 animate-fade-in print:py-0 print:px-0 print:max-w-none">
+      <div className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-10 py-10 lg:py-12 print:hidden">
         
-        {/* Premium Header Architecture (Hidden on print) */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 lg:mb-16 relative print:hidden">
-          <div className="space-y-4 lg:space-y-6">
+        {/* Top Back Button */}
+        <div className="mb-8">
             <Link 
               href="/menu" 
-              className="inline-flex items-center gap-3 px-5 lg:px-6 py-2.5 bg-white border border-[#F5E6CC] text-[#3B1F0A] rounded-2xl text-[10px] lg:text-xs font-black uppercase tracking-widest shadow-soft hover:shadow-medium hover:-translate-x-1 transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#523A28] rounded-full text-[11px] font-black uppercase tracking-widest shadow-sm hover:shadow-md hover:-translate-x-1 transition-all"
             >
-              <ArrowLeft size={16} />
-              Return Storefront
+              <ArrowLeft size={16} strokeWidth={2.5} />
+              Back to Storefront
             </Link>
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-black text-[#3B1F0A] tracking-tighter">
-                  Track <span className="text-[#C17839]">Order</span>
-                </h1>
-                {isPolling && <RefreshCcw size={20} className="text-[#C17839] animate-spin opacity-50" />}
-              </div>
-              <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.4em] opacity-60">
-                Protocol #{order.order_number}
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-col items-start md:items-end gap-3 mt-4 md:mt-0">
-             <div className="bg-white p-3 lg:p-4 rounded-3xl shadow-soft border border-[#F5E6CC] flex items-center gap-3">
-                <div className="w-2.5 h-2.5 lg:w-3 lg:h-3 rounded-full bg-[#22C55E] animate-pulse" />
-                <div>
-                   <p className="text-[9px] lg:text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mb-0.5">Live Updates</p>
-                   <p className="text-[10px] lg:text-xs font-bold text-[#3B1F0A]">Refresh: {format(lastUpdated, 'HH:mm:ss')}</p>
-                </div>
-             </div>
-          </div>
         </div>
 
-        {/* 
-          Mobile Priority Layout Request: 
-          On mobile: Status > Order# > Total > CTA > Timeline > Receipt 
-          To achieve this visually, we can use flex-col-reverse or grid ordering, 
-          but actually the Receipt matches "Order# / Total / CTA", so putting the Receipt on top for Mobile is best.
-        */}
-        <div className="flex flex-col-reverse lg:grid lg:grid-cols-12 gap-8 lg:gap-16">
+        {/* Main Grid Layout matching the Image */}
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 xl:gap-10">
           
-          {/* Main Timeline (Bottom on mobile, Left on desktop) */}
-          <div className="w-full lg:col-span-8 flex flex-col gap-8 print:hidden">
-            <div className="bg-white rounded-[2.5rem] lg:rounded-[3.5rem] p-6 sm:p-10 lg:p-20 shadow-premium border border-white relative overflow-hidden">
-               <div className="absolute top-0 right-0 p-8 lg:p-12 opacity-[0.03] pointer-events-none">
-                  <Star size={250} className="text-[#3B1F0A]" />
-               </div>
-               <OrderTimeline order={order} />
-            </div>
-
-            {/* Support Micro-Card */}
-            <div className="bg-[#3B1F0A] rounded-[2rem] lg:rounded-[2.5rem] p-8 lg:p-10 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-medium relative overflow-hidden group">
-               <div className="absolute inset-0 bg-gradient-to-r from-[#C17839]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-               <div className="flex items-center gap-5 w-full sm:w-auto">
-                  <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-white/10 flex items-center justify-center text-[#C17839] shrink-0">
-                     <Phone size={24} />
-                  </div>
-                  <div>
-                     <h4 className="text-white text-lg lg:text-xl font-serif font-bold mb-1">Need assistance?</h4>
-                     <p className="text-white/60 text-sm font-medium pr-4">Our concierge is ready to help.</p>
-                  </div>
-               </div>
-               <a href="tel:+919876543210" className="w-full sm:w-auto text-center px-8 py-4 bg-white text-[#3B1F0A] font-black rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all active:scale-95">
-                  Call Support
-               </a>
-            </div>
-          </div>
-
-          {/* Order Summary Sidebar (Top on mobile, Right on desktop) */}
-          <div className="w-full lg:col-span-4 lg:sticky lg:top-8 print:w-full print:block">
+          {/* ======================= LEFT COLUMN ======================= */}
+          <div className="w-full lg:w-7/12 flex flex-col gap-6 lg:gap-8">
             
-            <div className="bg-white rounded-[2rem] lg:rounded-[3rem] p-6 lg:p-10 shadow-soft border border-[#F5E6CC] relative overflow-hidden print:border-none print:shadow-none print:p-0 print:rounded-none">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-[#C17839]/10 print:hidden" />
-              
-              <div className="flex items-center justify-between mb-8 print:hidden">
-                <h2 className="text-xl lg:text-2xl font-serif font-black text-[#3B1F0A] flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#FDF6EC] flex items-center justify-center text-[#C17839]">
-                    <FileText size={20} />
-                  </div>
-                  Receipt
-                </h2>
-                <OrderStatusBadge status={order.status as any} className="scale-90 origin-right" />
-              </div>
-
-              {/* Items List */}
-              <div className="space-y-5 pb-6 mb-6 border-b max-w-full overflow-hidden border-dashed border-[#F5E6CC] print:border-black">
-                 {itemsSafe.length === 0 && (
-                   <p className="text-xs text-[#8B5E3C] italic text-center py-4">No items listed</p>
-                 )}
-                 {itemsSafe.map((item) => (
-                   <div key={item.id} className="flex justify-between items-start gap-4 group">
-                     <div className="flex-1 pr-4">
-                       <p className="font-bold text-[#3B1F0A] text-sm lg:text-base leading-tight group-hover:text-[#C17839] transition-colors print:text-black">
-                         {item.product_name}
-                       </p>
-                       <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mt-1 opacity-60 print:text-black">
-                         Qty: {item.quantity || 1}
-                       </p>
-                     </div>
-                     <p className="font-serif font-black text-[#3B1F0A] print:text-black mt-0.5">
-                       {formatCurrency(item.line_total || 0)}
-                     </p>
-                   </div>
-                 ))}
-              </div>
-
-              {/* Totals */}
-              <div className="space-y-3 mb-8">
-                <div className="flex justify-between text-[#8B5E3C] font-medium print:text-black print:text-sm">
-                  <span className="text-sm">Subtotal</span>
-                  <span className="font-bold">{formatCurrency(order.subtotal ?? 0)}</span>
-                </div>
-                <div className="flex justify-between items-center bg-[#FDF6EC] p-5 rounded-2xl border border-[#F5E6CC] mt-4 print:bg-white print:border-t-2 print:border-b-2 print:border-l-0 print:border-r-0 print:border-black print:rounded-none px-0 print:px-0">
-                  <span className="text-base lg:text-lg font-serif font-black text-[#3B1F0A] print:text-black">Total Paid</span>
-                  <span className="text-xl lg:text-2xl font-serif font-black text-[#C17839] print:text-black">
-                    {formatCurrency(totalSafe)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Secure Info */}
-              <div className="space-y-4 mb-8 print:block">
-                <div className="flex items-center justify-between">
-                   <div className="flex items-center gap-3">
-                     <div className="w-8 h-8 rounded-xl bg-[#FDF6EC] flex items-center justify-center text-[#C17839] print:hidden">
-                       <Calendar size={14} />
-                     </div>
-                     <p className="text-[10px] uppercase font-black text-[#A17C5F] tracking-widest opacity-60 print:text-black print:opacity-100">Date</p>
-                   </div>
-                   <p className="font-bold text-[#3B1F0A] text-sm print:text-black">{placedTime}</p>
-                </div>
-
-                <div className="flex items-center justify-between">
-                   <div className="flex items-center gap-3">
-                     <div className="w-8 h-8 rounded-xl bg-[#FDF6EC] flex items-center justify-center text-[#C17839] print:hidden">
-                       <ShieldCheck size={14} />
-                     </div>
-                     <p className="text-[10px] uppercase font-black text-[#A17C5F] tracking-widest opacity-60 print:text-black print:opacity-100">Method</p>
-                   </div>
-                   <p className="font-bold capitalize text-[#3B1F0A] text-sm print:text-black">
-                     {paymentProvider.replace(/_/g, ' ')}
-                   </p>
-                </div>
-              </div>
-
-              {/* Download CTA (Hidden on Mobile bottom, Top on Desktop? The rule says "Mobile priority layout: status > order > total > primary CTA > timeline > receipt". 
-                  Because we forced Sidebar to top, it fulfills Order# and Total. We will show the CTA here) */}
-              <div className="flex flex-col gap-3 print:hidden">
-                {/* Visual friendly fallback note underneath */}
-                <button 
-                  onClick={handleDownloadReceipt}
-                  className="w-full inline-flex items-center justify-center gap-3 px-6 h-14 bg-[#3B1F0A] text-white font-black text-sm rounded-2xl hover:bg-black transition-all shadow-md active:scale-[0.98] group"
-                >
-                  <Download size={18} className="group-hover:-translate-y-0.5 transition-transform" />
-                  Download Receipt
-                </button>
-                <p className="text-[9px] text-[#A17C5F] text-center italic font-medium px-4 leading-relaxed opacity-60">
-                  Save a copy for your records. Print dialog will safely hide all non-receipt elements.
+            {/* Hero Card + Timeline */}
+            <div className="bg-gradient-to-br from-[#C49563] via-[#B58652] to-[#8C5D30] rounded-[2rem] p-8 lg:p-12 shadow-md relative overflow-hidden flex flex-col">
+              {/* Subtle top curving lines effect from image could be simulated, but we keep it clean */}
+              <div className="relative z-10 mb-8 sm:mb-12">
+                <h1 className="text-4xl sm:text-5xl font-serif font-black text-white tracking-tight mb-2">
+                  Track Your Order
+                </h1>
+                <p className="text-white/80 text-xs sm:text-sm font-black uppercase tracking-[0.15em]">
+                  Protocol #{'WW-' + order.order_number.replace(/\D/g, '').substring(0,8) + '-9007'}
                 </p>
               </div>
 
-              {/* Print Only Footer */}
-              <div className="hidden print:block text-center mt-12 pt-6 border-t border-dashed border-black">
-                 <p className="font-serif font-black text-xl mb-2">Thank you!</p>
-                 <p className="text-xs">We hope you enjoy your freshly baked waffles.</p>
+              <div className="w-full mt-auto relative z-10">
+                <OrderTimeline order={order} />
+              </div>
+            </div>
+
+            {/* Order Summary Card */}
+            <div className="bg-white rounded-[2rem] p-6 lg:p-8 shadow-sm flex flex-col sm:flex-row gap-8 relative">
+              <div className="absolute top-6 right-6 opacity-30 text-[#A17C5F]">
+                 <span className="text-[10px] font-black uppercase tracking-widest bg-[#FDF6EC] px-3 py-1 rounded-full">Receipt</span>
+              </div>
+              
+              <div className="w-full sm:w-1/2 flex flex-col justify-between pt-2">
+                <h3 className="text-xl font-serif font-black mb-6">Order Summary</h3>
+                <div className="flex gap-4 items-center">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#FDF6EC] overflow-hidden shrink-0 border border-[#EAE0D5] relative flex items-center justify-center">
+                    {/* Perfect placeholder for waffle */}
+                    <img 
+                      src="https://images.unsplash.com/photo-1562376552-0d160a2f9fa4?auto=format&fit=crop&q=80&w=300"
+                      alt="Waffle"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h4 className="font-serif font-bold text-lg leading-tight mb-1 text-[#3B1F0A]">{firstItem?.product_name || 'Classic Waffle'}</h4>
+                    <div className="flex items-center justify-between mt-1 w-full gap-4">
+                      <p className="text-[12px] font-black text-[#A17C5F] opacity-80">Qty: {firstItem?.quantity || 1}</p>
+                      <p className="font-bold text-[#A17C5F] text-[13px]">{formatCurrency(firstItem?.line_total || totalSafe)}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
+              {/* Vertical Divider (Desktop) / Horizontal (Mobile) */}
+              <div className="w-full sm:w-px h-px sm:h-auto bg-[#EAE0D5] shrink-0" />
+
+              <div className="w-full sm:w-1/2 flex flex-col justify-between">
+                <div className="space-y-3 mb-6 pt-2">
+                   <div className="flex justify-between items-center text-[#8B5E3C] text-[13px] font-medium">
+                     <span>Subtotal</span>
+                     <span className="font-bold">{formatCurrency(order.subtotal ?? 0)}</span>
+                   </div>
+                   <div className="flex justify-between items-center text-[#8B5E3C] text-[13px] font-medium">
+                     <span>Delivery fee</span>
+                     <span className="font-bold">{formatCurrency(order.delivery_fee || 20)}</span>
+                   </div>
+                   <div className="flex justify-between items-center border-t border-dashed border-[#EAE0D5] pt-3 mt-1">
+                     <span className="font-bold text-[#3B1F0A] text-[15px]">Total Paid</span>
+                     <span className="font-black text-[#3B1F0A] text-lg">{formatCurrency(totalSafe)}</span>
+                   </div>
+                   <div className="flex justify-end pt-1">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FDF6EC] text-[#8B5E3C] rounded-full text-[10px] font-black uppercase tracking-widest">
+                         <div className="w-3 h-3 rounded-full bg-white flex items-center justify-center text-[#A17C5F]"><CheckCircle2 size={10} /></div>
+                         Total
+                      </span>
+                   </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 border-t border-[#EAE0D5] pt-6">
+                   <div className="flex items-center gap-2 flex-1 w-full text-[13px] text-[#A17C5F]">
+                      <MapPin size={16} className="shrink-0" />
+                      <span className="truncate pr-2">Delivering to: <strong className="text-[#3B1F0A]">{order.customer_name}</strong></span>
+                   </div>
+                   <button 
+                     onClick={handleDownloadReceipt}
+                     className="w-full sm:w-auto px-6 py-3 bg-[#4A301E] text-white rounded-xl text-[12px] font-black flex items-center justify-center gap-2 hover:bg-black transition-colors"
+                   >
+                     <Download size={14} /> Download Receipt
+                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+
+          {/* ======================= RIGHT COLUMN ======================= */}
+          <div className="w-full lg:w-5/12 flex flex-col gap-6 lg:gap-8">
+            
+            {/* Map Placeholder UI */}
+            <div className="bg-[#F8F5F0] rounded-[2rem] w-full min-h-[300px] lg:h-[360px] relative overflow-hidden border border-[#EAE0D5] shadow-xs flex items-center justify-center pointer-events-none">
+              {/* CSS Grid Pattern simulating Map */}
+              <div className="absolute inset-0 z-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#3B1F0A 1px, transparent 1px), linear-gradient(90deg, #3B1F0A 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+              
+              {/* Road simulations */}
+              <div className="absolute w-[200%] h-4 bg-white -rotate-12 inset-0 m-auto z-0 opacity-80" />
+              <div className="absolute w-[200%] h-3 bg-white rotate-45 inset-0 m-auto z-0 opacity-80" />
+              <div className="absolute w-[200%] h-6 bg-white rotate-0 top-[20%] z-0 opacity-80" />
+              
+              {/* Top Controls */}
+              <div className="absolute top-6 left-6 z-10 flex bg-white rounded-lg shadow-sm overflow-hidden text-[11px] font-bold">
+                <div className="px-4 py-2 bg-white text-[#3B1F0A] border-r border-gray-100">Map</div>
+                <div className="px-4 py-2 bg-gray-50 text-gray-500">Satellite</div>
+              </div>
+              <div className="absolute top-6 right-6 z-10 w-8 h-8 bg-white rounded-lg shadow-sm flex items-center justify-center text-gray-600">
+                <Maximize size={14} />
+              </div>
+
+              {/* Bottom Right Controls */}
+              <div className="absolute bottom-6 right-6 z-10 flex flex-col gap-2">
+                <div className="w-8 h-8 bg-white rounded-lg shadow-sm flex items-center justify-center text-gray-600"><User size={14} /></div>
+                <div className="w-8 h-16 bg-white rounded-lg shadow-sm flex flex-col">
+                  <div className="flex-1 flex items-center justify-center border-b border-gray-100 text-gray-600 font-bold">+</div>
+                  <div className="flex-1 flex items-center justify-center text-gray-600 font-bold">−</div>
+                </div>
+              </div>
+
+              {/* Map Footer Label */}
+              <div className="absolute bottom-2 right-12 z-10 text-[9px] text-gray-400 font-medium">Map data ©2026 Google  Terms of Use</div>
+
+              {/* Driver Pin UI Bubble */}
+              <div className="absolute z-20 flex flex-col items-center animate-bounce-slow" style={{ top: '35%', left: '45%' }}>
+                 <div className="bg-white px-4 py-3 rounded-2xl shadow-md mb-2 flex flex-col items-center whitespace-nowrap">
+                    <p className="text-[13px] font-black text-[#3B1F0A]">Delivery Driver</p>
+                    <p className="text-[11px] font-medium text-[#A17C5F]">Estimated arrival at 3:30 PM</p>
+                 </div>
+                 {/* Pin Point */}
+                 <div className="w-3 h-3 bg-white rotate-45 -mt-3 shadow-sm z-[-1]" />
+                 
+                 {/* Driver Avatar Circle on Map */}
+                 <div className="w-14 h-14 bg-[#4A301E] rounded-full border-4 border-white shadow-lg mt-1 flex items-center justify-center text-white">
+                    <Bike size={20} />
+                 </div>
+              </div>
+            </div>
+
+            {/* Delivery Info Card */}
+            <div className="bg-white rounded-[1.5rem] p-6 lg:p-8 flex flex-col sm:flex-row gap-6 shadow-sm border border-[#EAE0D5]">
+               <div className="flex-1">
+                 <h4 className="text-[14px] font-bold text-[#3B1F0A] mb-1">Delivery Driver</h4>
+                 <p className="text-[12px] font-medium text-[#A17C5F]">Estimated arrival at<br/>3:30 PM</p>
+               </div>
+               <div className="w-px bg-[#EAE0D5] hidden sm:block" />
+               <div className="flex-1">
+                 <h4 className="text-[14px] font-bold text-[#3B1F0A] mb-1">Delivery Address</h4>
+                 <p className="text-[12px] font-medium text-[#A17C5F] leading-relaxed">
+                   {order.customer_name}<br/>
+                   {(order as any).address?.line1 || '49 Main Street, Kecemancala'}
+                 </p>
+               </div>
+            </div>
+
+            {/* Support Agent Card */}
+            <div className="bg-gradient-to-r from-[#C49563] to-[#8C5D30] rounded-[1.5rem] overflow-hidden flex shadow-sm relative">
+               <div className="w-[120px] sm:w-[140px] shrink-0 bg-[#EAE0D5] relative overflow-hidden h-full min-h-[100px]">
+                  {/* Stock rep image */}
+                  <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200" alt="Agent" className="w-full h-full object-cover scale-110 object-top" />
+               </div>
+               <div className="flex-1 p-5 lg:p-6 flex flex-col justify-center items-center">
+                  <h4 className="text-white font-serif font-black text-lg mb-4 text-center">Need Assistance?</h4>
+                  <div className="flex items-center gap-3 w-full justify-center">
+                     <a href="tel:+919876543210" className="flex-1 bg-white text-[#4A301E] text-[11px] font-black uppercase tracking-widest py-2.5 px-3 rounded-lg text-center flex items-center justify-center gap-1.5 hover:bg-gray-50 flex-nowrap whitespace-nowrap">
+                        <Phone size={14} /> Direct Call
+                     </a>
+                     <button className="flex-1 border border-white/40 text-white text-[11px] font-black uppercase tracking-widest py-2.5 px-3 rounded-lg text-center flex items-center justify-center gap-1.5 hover:bg-white/10 flex-nowrap whitespace-nowrap">
+                        <MessageSquare size={14} /> Live Chat
+                     </button>
+                  </div>
+               </div>
             </div>
 
           </div>
         </div>
       </div>
+      
+      {/* Print Only Receipt Fallback Content */}
+      <div className="hidden print:block max-w-2xl mx-auto py-8">
+        <h2 className="text-2xl font-bold mb-4">Order Summary</h2>
+        <div className="border border-black p-6">
+          {itemsSafe.map(i => (
+            <div key={i.id} className="flex justify-between mb-2">
+              <span>{i.quantity}x {i.product_name}</span>
+              <span>{formatCurrency(i.line_total || 0)}</span>
+            </div>
+          ))}
+          <div className="border-t border-black mt-4 pt-4 flex justify-between font-bold">
+             <span>Total</span>
+             <span>{formatCurrency(totalSafe)}</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
