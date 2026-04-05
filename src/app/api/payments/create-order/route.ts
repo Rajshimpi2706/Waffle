@@ -118,6 +118,8 @@ export async function POST(request: Request) {
     }
 
     // 5. Create Local Order (Status: pending)
+    // FIX B2: total_amount must be set at creation so success/track/history pages render correctly.
+    // Current flow has no delivery fee, coupon, or tax — so total_amount = calculatedSubtotal.
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -125,6 +127,7 @@ export async function POST(request: Request) {
         customer_name,
         customer_phone,
         subtotal: calculatedSubtotal,
+        total_amount: calculatedSubtotal,   // ← B2 fix: was missing, causing ₹0.00 on success/track pages
         status: 'pending',
         customer_id: customerId
       })

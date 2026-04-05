@@ -118,9 +118,13 @@ export default async function SuccessPage({ params }: SuccessPageProps) {
                     <ShieldCheck size={28} className="text-[#22C55E]" />
                     <span className="font-black text-[#3B1F0A] uppercase tracking-[0.2em] text-sm">Grand Total Paid</span>
                  </div>
-                 <span className="text-4xl font-serif font-black text-[#C17839]">{formatCurrency(order.total_amount)}</span>
+                 {/* Null-safe: fall back to subtotal if total_amount is missing (pre-B2-fix orders) */}
+                 <span className="text-4xl font-serif font-black text-[#C17839]">
+                   {formatCurrency(order.total_amount ?? order.subtotal ?? 0)}
+                 </span>
                </div>
             </div>
+
           </div>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center relative z-10">

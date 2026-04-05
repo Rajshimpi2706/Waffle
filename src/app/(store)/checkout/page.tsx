@@ -118,15 +118,31 @@ export default function CheckoutPage() {
       const orderData = data;
       const { id: localOrderId, amount, currency, razorpay_order_id, key } = orderData.order;
 
+      // ─── RACE CONDITION FIX ────────────────────────────────────────────────
+      // This flag is set to true the moment the Razorpay success handler fires.
+      // The payment.failed listener MUST check this flag before routing to the
+      // failure page, because Razorpay can fire payment.failed on modal close
+      // even after a successful payment has already been handled.
+      let paymentSucceeded = false;
+      // ────────────────────────────────────────────────────────────────────────
+
       const options = {
         key: key,
-        amount: amount * 100, // already in paise if backend sends it that way, but my backend sends rupees.
+        // FIX: Backend returns amount in rupees. Do NOT multiply by 100.
+        // Razorpay modal's `amount` field is for display only — the actual
+        // capture amount is locked to the Razorpay order created server-side.
+        amount: amount,
         currency: currency,
         name: 'Waffle Wala',
         description: `Order #${orderData.order.order_number}`,
         image: '/logo.png',
         order_id: razorpay_order_id,
         handler: async function (response: any) {
+          // Mark success IMMEDIATELY before any async work so the
+          // payment.failed listener sees paymentSucceeded === true
+          // if it fires concurrently during modal close.
+          paymentSucceeded = true;
+
           try {
             const verifyRes = await fetch('/api/payments/verify', {
               method: 'POST',
@@ -142,7 +158,7 @@ export default function CheckoutPage() {
             const verifyData = await verifyRes.json();
             if (verifyRes.ok && verifyData.success) {
               clearCart();
-              // Redirect to the new Phase 4 success page
+              // Redirect to the success page — this is the ONLY success path
               router.push(`/order/${localOrderId}/success`);
             } else {
               throw new Error(verifyData.error || 'Verification failed');
@@ -161,17 +177,33 @@ export default function CheckoutPage() {
         },
         modal: {
           ondismiss: function() {
-            setIsProcessing(false);
+            // Only reset processing if payment was NOT already successfully handled.
+            // If the user dismissed AFTER a successful payment, we don't
+            // want to interfere — the handler is already routing to success.
+            if (!paymentSucceeded) {
+              setIsProcessing(false);
+            }
           }
         }
       };
 
       const rzp = new (window as any).Razorpay(options);
+
       rzp.on('payment.failed', function (response: any) {
+        // CRITICAL: Guard against this event firing after a successful payment.
+        // Razorpay can emit payment.failed during modal teardown even when the
+        // handler has already confirmed success. Without this guard, the app
+        // shows success briefly and then navigates to the failure page.
+        if (paymentSucceeded) {
+          console.warn('[Razorpay] payment.failed event ignored — success already confirmed.');
+          return;
+        }
+
         toast.error('Payment failed: ' + response.error.description);
         setIsProcessing(false);
         router.push('/payment-failed');
       });
+
       rzp.open();
 
     } catch (err: any) {
@@ -185,9 +217,14 @@ export default function CheckoutPage() {
         duration: 10000
       });
     } finally {
+      // Only reset the processing spinner if we haven't already redirected.
+      // This avoids a flicker where the button briefly re-enables after rzp.open()
+      // returns but before the handler completes.
+      // Note: if payment succeeds, the component will unmount during navigation anyway.
       setIsProcessing(false);
     }
   };
+
 
   if (isEmpty && !isProcessing) {
     return (

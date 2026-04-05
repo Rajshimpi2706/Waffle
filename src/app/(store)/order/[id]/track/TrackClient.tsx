@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { Order } from '@/types';
@@ -139,7 +139,7 @@ export function TrackClient({ initialOrder, phoneLast4 }: TrackClientProps) {
                 </div>
                 <div className="flex justify-between items-center bg-[#FDF6EC] p-6 rounded-2xl border border-[#F5E6CC] mt-6">
                   <span className="text-lg font-serif font-black text-[#3B1F0A]">Grand Total</span>
-                  <span className="text-2xl font-serif font-black text-[#C17839]">{formatCurrency(order.total_amount)}</span>
+                  <span className="text-2xl font-serif font-black text-[#C17839]">{formatCurrency(order.total_amount ?? order.subtotal ?? 0)}</span>
                 </div>
               </div>
 
