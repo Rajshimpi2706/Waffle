@@ -28,7 +28,7 @@ export default function LoginPage() {
                   Waffle Wala
                 </span>
                 <p className="text-[8px] uppercase tracking-[0.2em] text-[#b47a46] mt-0.5 font-medium">
-                  Har Bite Mein Happiness
+                  Har Bite Mein Happiness <span className="bg-white/20 text-white px-1 rounded ml-1 animate-pulse">DEBUG: LOGIN V6</span>
                 </p>
               </div>
             </div>

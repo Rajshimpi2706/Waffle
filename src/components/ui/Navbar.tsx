@@ -74,7 +74,7 @@ export function Navbar() {
                 Waffle<span className="text-[#C17839] group-hover:text-[#3B1F0A] transition-colors duration-500">Wala</span>.
               </span>
               <span className="text-[11px] md:text-[12px] uppercase font-black tracking-[0.3em] md:tracking-[0.4em] text-[#8B5E3C] opacity-70 mt-1.5 leading-none transition-all duration-500 group-hover:tracking-[0.5em] group-hover:opacity-100">
-                Har Bite Mein Happiness
+                Har Bite Mein Happiness <span className="text-[8px] bg-[#C17839] text-white px-1 rounded ml-1 animate-pulse">DEBUG: V6</span>
               </span>
             </Link>
 
