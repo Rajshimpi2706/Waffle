@@ -18,7 +18,7 @@ export default function LoginPage() {
         <div className="absolute -bottom-[15%] left-[10%] w-[120%] h-[60%] bg-[#b47a46] rounded-full blur-[100px] opacity-40 pointer-events-none" />
         
         <div className="relative z-10 flex flex-col h-full">
-          <Link href="/" className="inline-block group cursor-pointer mb-16 md:mb-24">
+          <Link href="/" className="inline-block group cursor-pointer mt-10 md:mt-16 mb-16 md:mb-24">
             <div className="flex items-center gap-2">
               <svg className="w-8 h-8 text-[#C17839]" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm0 18a8 8 0 118-8 8 8 0 01-8 8zm-1-11v2H9v2h2v2h2v-2h2v-2h-2V9h-2zm-4 4h2v2H7v-2zm8 0h2v2h-2v-2zm-4-4h2v2h-2V9z" />

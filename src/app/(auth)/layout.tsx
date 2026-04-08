@@ -12,7 +12,7 @@ export default function AuthLayout({
       <Suspense fallback={<div className="h-16 w-full bg-[#FDF6EC]/80 backdrop-blur-xl animate-pulse" />}>
         <Navbar />
       </Suspense>
-      <main className="flex-grow">
+      <main className="flex-grow pt-20">
         {children}
       </main>
       <Footer />
