@@ -1,96 +1,49 @@
-import { createClient } from '@/lib/supabase/server';
-import type { AuditLog } from '@/types';
+import { createServiceClient } from '@/lib/supabase/server';
+import { getAdminRole } from '@/lib/adminAuth';
 
-type AuditPayload = Omit<AuditLog, 'id' | 'created_at'>;
+export interface AuditLogOptions {
+  action_type: string;
+  entity_type: string;
+  entity_id?: string;
+  previous_value?: Record<string, unknown>;
+  new_value?: Record<string, unknown>;
+  actor_user_id?: string;
+  actor_role?: string;
+  ip_address?: string;
+}
 
 /**
- * Write a structured audit log record.
- * Uses service role via server client — RLS permits inserts via service role only.
- * Does NOT throw; logs errors silently to avoid breaking primary flows.
+ * Securly logs an administrative action to the audit_logs table.
+ * Resolves the actor dynamically if not natively provided.
  */
-export async function writeAuditLog(payload: AuditPayload): Promise<void> {
+export const logAudit = logAdminAction;
+
+export async function logAdminAction(options: AuditLogOptions) {
   try {
-    const supabase = await createClient();
-    await supabase.from('audit_logs').insert(payload);
-  } catch (err) {
-    console.error('[AuditLog] Failed to write audit log:', err);
+    const supabase = await createServiceClient(); // use service client since audit logging usually bypasses RLS
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      console.warn('[Audit Logger] Attempted to log action without authenticated user');
+      return;
+    }
+
+    const role = await getAdminRole();
+
+    await supabase.from('audit_logs').insert({
+      actor_user_id: options.actor_user_id ?? user.id,
+      actor_role: options.actor_role ?? role ?? 'unknown',
+      action_type: options.action_type,
+      entity_type: options.entity_type,
+      entity_id: options.entity_id,
+      previous_value: options.previous_value,
+      new_value: options.new_value,
+      ip_address: options.ip_address,
+      created_at: new Date().toISOString()
+    });
+
+  } catch (error) {
+    // We don't throw to avoid breaking the main operation if audit logging fails
+    console.error('[Audit Logger] Failed to log action:', error);
   }
-}
-
-export const logAudit = writeAuditLog;
-
-// Convenience factory helpers
-export function productAudit(
-  action: 'created' | 'updated' | 'deleted' | 'price_changed' | 'inventory_changed',
-  productId: string,
-  actorId: string,
-  actorRole: string,
-  previous?: Record<string, unknown>,
-  next?: Record<string, unknown>,
-  ip?: string
-): AuditPayload {
-  return {
-    actor_user_id: actorId,
-    actor_role: actorRole,
-    action_type: `product_${action}`,
-    entity_type: 'product',
-    entity_id: productId,
-    previous_value: previous,
-    new_value: next,
-    ip_address: ip,
-  };
-}
-
-export function orderStatusAudit(
-  orderId: string,
-  previousStatus: string,
-  newStatus: string,
-  actorId: string,
-  actorRole: string,
-  ip?: string
-): AuditPayload {
-  return {
-    actor_user_id: actorId,
-    actor_role: actorRole,
-    action_type: 'order_status_changed',
-    entity_type: 'order',
-    entity_id: orderId,
-    previous_value: { status: previousStatus },
-    new_value: { status: newStatus },
-    ip_address: ip,
-  };
-}
-
-export function couponAudit(
-  action: 'created' | 'updated' | 'deactivated',
-  couponId: string,
-  actorId: string,
-  actorRole: string,
-  previous?: Record<string, unknown>,
-  next?: Record<string, unknown>
-): AuditPayload {
-  return {
-    actor_user_id: actorId,
-    actor_role: actorRole,
-    action_type: `coupon_${action}`,
-    entity_type: 'coupon',
-    entity_id: couponId,
-    previous_value: previous,
-    new_value: next,
-  };
-}
-
-export function adminLoginAudit(
-  actorId: string,
-  success: boolean,
-  ip?: string
-): AuditPayload {
-  return {
-    actor_user_id: actorId,
-    actor_role: 'unknown',
-    action_type: success ? 'admin_login_success' : 'admin_login_failed',
-    entity_type: 'admin_user',
-    entity_id: actorId,
-    ip_address: ip,
-  };
 }

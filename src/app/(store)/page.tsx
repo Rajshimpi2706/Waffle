@@ -59,12 +59,12 @@ export default function HomePage() {
         <div className="safe-container">
           <div className="text-center mb-24 animate-fade-in">
             <h2 className="text-5xl md:text-7xl lg:text-8xl font-serif font-black text-[#3B1F0A] mb-6 tracking-tighter">
-               Our <span className="text-[#C17839]">Bestsellers.</span>
+              Our <span className="text-[#C17839]">Bestsellers.</span>
             </h2>
             <div className="flex items-center justify-center gap-4 mb-10">
-               <div className="h-[1.5px] w-20 bg-gradient-to-r from-transparent to-[#C17839]" />
-               <Star size={18} className="fill-[#C17839] text-[#C17839] opacity-40" />
-               <div className="h-[1.5px] w-20 bg-gradient-to-l from-transparent to-[#C17839]" />
+              <div className="h-[1.5px] w-20 bg-gradient-to-r from-transparent to-[#C17839]" />
+              <Star size={18} className="fill-[#C17839] text-[#C17839] opacity-40" />
+              <div className="h-[1.5px] w-20 bg-gradient-to-l from-transparent to-[#C17839]" />
             </div>
             <p className="text-[#8B5E3C] max-w-2xl mx-auto text-xl font-medium italic leading-relaxed opacity-80">
               "A symphony of crunch and chocolate, crafted to perfection for your moments of pure joy."

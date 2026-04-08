@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, ChevronDown, Phone } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/client';
@@ -53,20 +53,22 @@ export function PhoneLogin({ onSuccess, isLoading, setIsLoading }: PhoneLoginPro
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
-      <div className="space-y-3">
-        <label className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest ml-1">
+    <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in w-full">
+      <div className="space-y-2">
+        <label className="text-[13px] font-bold text-[#2a1306] ml-1">
           Mobile Number
         </label>
         <div className="relative group">
-          <div className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-            <Phone size={18} className="text-[#C17839] group-focus-within:scale-110 transition-transform" />
-            <span className="text-[#3B1F0A] font-bold text-sm border-r border-[#F5E6CC] pr-2">+91</span>
+          {/* Flag and country code prefix */}
+          <div className="absolute left-1 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1 bg-white border-r border-[#e8dccb] z-10 rounded-l-[12px] h-[calc(100%-8px)] text-[#2a1306]">
+            <img src="https://flagcdn.com/w20/in.png" srcSet="https://flagcdn.com/w40/in.png 2x" width="20" alt="India flag" className="rounded-sm shadow-sm" />
+            <span className="font-semibold text-[15px] ml-0.5">+91</span>
+            <ChevronDown size={14} className="text-[#a1897b] ml-0.5" />
           </div>
           <Input 
             type="tel"
             placeholder="Enter 10-digit number"
-            className="pl-24 h-16 bg-[#FDF6EC]/30 border-[#F5E6CC] rounded-2xl focus:shadow-premium transition-all text-[#3B1F0A] font-bold text-lg tracking-wide placeholder:tracking-normal placeholder:font-medium"
+            className="pl-[104px] h-[52px] bg-white border-2 border-[#d39665] rounded-xl shadow-[0_2px_10px_rgba(211,150,101,0.15)] focus:ring-4 focus:ring-[#d39665]/20 focus:border-[#d39665] transition-all text-[#2a1306] font-medium text-[15px] w-full"
             value={phone}
             onChange={(e) => {
               const val = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -78,23 +80,21 @@ export function PhoneLogin({ onSuccess, isLoading, setIsLoading }: PhoneLoginPro
             autoFocus
           />
         </div>
-        {error && <p className="text-[10px] text-red-500 mt-1 ml-1 font-black uppercase tracking-widest animate-fade-in">{error}</p>}
+        {error && <p className="text-[11px] text-red-500 mt-1 ml-1 font-medium">{error}</p>}
       </div>
 
       <Button 
         type="submit" 
-        size="xl"
-        className="w-full h-16 rounded-[1.5rem] shadow-premium hover:shadow-[#C17839]/20 bg-[#C17839] hover:bg-[#3B1F0A] text-white border-none group transition-all active:scale-95 text-lg font-black"
-        loading={isLoading}
+        className="w-full h-[52px] rounded-full shadow-[0_4px_14px_rgba(69,38,20,0.3)] bg-gradient-to-r from-[#d39665] via-[#a86532] to-[#3a1d0a] hover:from-[#c38655] hover:to-[#2a0d0a] text-white border-none group transition-all active:scale-[0.98] mt-1"
         disabled={phone.length < 10 || isLoading}
       >
         {isLoading ? (
-          'Sending...'
+          <Loader2 size={20} className="animate-spin text-white/70" />
         ) : (
-          <>
+          <div className="flex items-center gap-1.5 font-normal text-[15px]">
             Send OTP
-            <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
-          </>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-80"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
         )}
       </Button>
     </form>

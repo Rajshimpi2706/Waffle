@@ -54,16 +54,15 @@ export function HeroExperience() {
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]" />
       </div>
 
-      <div className="safe-container relative z-10 grid lg:grid-cols-2 lg:items-center gap-16 lg:gap-24 pt-12 pb-12 lg:pt-28 lg:pb-24">
-
+      <div className="safe-container relative z-10 grid lg:grid-cols-2 lg:items-center gap-16 lg:gap-24 pt-[30px] pb-12 lg:pt-[30px] lg:pb-24">
         {/* Content Side Architecture */}
         <div className="flex flex-col items-center lg:items-start text-center lg:text-left animate-fade-in relative z-30 pointer-events-auto">
-          <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-[#C17839]/15 border border-[#C17839]/30 text-[#F0BC5E] text-[10px] font-black uppercase tracking-[0.3em] mb-6 md:mb-10 shadow-2xl backdrop-blur-xl">
+          <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-[#C17839]/15 border border-[#C17839]/30 text-[#F0BC5E] text-[10px] font-black uppercase tracking-[0.3em] mb-2 md:mb-3 shadow-2xl backdrop-blur-xl">
             <Star size={14} className="fill-[#F0BC5E]" />
             Premium Waffles
           </div>
 
-          <h1 className="text-4xl md:text-8xl lg:text-[7rem] font-serif font-black text-white mb-6 md:mb-8 leading-[0.9] tracking-tighter drop-shadow-2xl">
+          <h1 className="text-4xl md:text-8xl lg:text-[7rem] font-serif font-black text-white mb-3 md:mb-4 leading-[0.9] tracking-tighter drop-shadow-2xl">
             Har Bite Mein <br />
             <span className="text-[#E8A535]">Happiness.</span>
           </h1>

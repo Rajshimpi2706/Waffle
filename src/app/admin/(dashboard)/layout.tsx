@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut } from 'lucide-react';
 
+import { protectAdminPage } from '@/lib/adminAuth';
+
 export const metadata = {
   title: 'Admin Dashboard | Waffle House',
 };
@@ -15,20 +17,8 @@ export default async function AdminLayout({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect('/admin/login');
-  }
-
-  // Middleware already checks if user is active admin, but we can fetch role for UI
-  const { data: adminUser } = await supabase
-    .from('admin_users')
-    .select('role, last_login_at')
-    .eq('auth_user_id', user.id)
-    .single();
-
-  if (!adminUser) {
-    redirect('/admin/login?reason=unauthorized');
-  }
+  // Robust Server-Side Guard
+  const role = await protectAdminPage(['owner', 'manager', 'staff']);
 
   const navItems = [
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -53,11 +43,11 @@ export default async function AdminLayout({
             
             <div className="mt-10 p-5 bg-[#FDF6EC]/50 rounded-3xl border border-[#F5E6CC] flex items-center gap-4">
                <div className="w-12 h-12 rounded-2xl bg-[#3B1F0A] text-white flex items-center justify-center font-serif font-black text-xl shadow-md border border-white/20">
-                 {user.email?.charAt(0).toUpperCase()}
+                 {user?.email?.charAt(0).toUpperCase() || 'A'}
                </div>
                <div className="overflow-hidden">
-                 <p className="text-xs font-black text-[#3B1F0A] truncate tracking-tight">{user.email}</p>
-                 <p className="text-[9px] font-bold text-[#C17839] uppercase tracking-widest mt-0.5">{adminUser.role}</p>
+                 <p className="text-xs font-black text-[#3B1F0A] truncate tracking-tight">{user?.email || 'Admin'}</p>
+                 <p className="text-[9px] font-bold text-[#C17839] uppercase tracking-widest mt-0.5">{role}</p>
                </div>
             </div>
           </div>

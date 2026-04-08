@@ -92,19 +92,15 @@ export async function PATCH(
       return NextResponse.json({ error: 'Failed to update status' }, { status: 500 });
     }
 
-    // 5. Audit Logging (Optional but recommended)
-    try {
-      await supabase.from('audit_logs').insert({
-        action_type: 'ORDER_STATUS_UPDATE',
-        entity_type: 'orders',
-        entity_id: id,
-        previous_value: { status: currentStatus },
-        new_value: { status: newStatus },
-        created_at: new Date().toISOString()
-      });
-    } catch (auditErr) {
-      console.error('Audit log failed (non-critical):', auditErr);
-    }
+    // 5. Audit Logging
+    const { logAdminAction } = await import('@/lib/audit');
+    await logAdminAction({
+      action_type: 'ORDER_STATUS_UPDATE',
+      entity_type: 'orders',
+      entity_id: id,
+      previous_value: { status: currentStatus },
+      new_value: { status: newStatus }
+    });
 
     return NextResponse.json({
       success: true,

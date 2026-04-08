@@ -11,22 +11,17 @@ export function AuthCanvas() {
   const [isLoading, setIsLoading] = useState(false);
 
   return (
-    <div className="w-full max-w-[420px] mx-auto animate-fade-in relative z-20">
+    <div className="w-full mx-auto animate-fade-in relative z-20 flex flex-col">
       
-      {/* Mobile-only header (Desktop shows it on the left panel) */}
-      <div className="md:hidden text-center mb-10">
-        <h1 className="text-3xl font-serif font-black text-[#3B1F0A] mb-3">Welcome Back</h1>
-        <p className="text-[#8B5E3C] text-sm font-medium italic">
-          "Sign in to secure your order and track your happiness."
+      {/* Header sections fully centered to match image */}
+      <div className="text-center mb-8 mt-2">
+        <h1 className="text-[2.2rem] font-serif font-bold text-[#2a1306] mb-3 tracking-tight">Login / Signup</h1>
+        <p className="text-[#4a2e1b] text-[14.5px] max-w-[260px] mx-auto leading-snug">
+          Use your mobile number or Google account to continue.
         </p>
       </div>
 
-      <div className="hidden md:block mb-10">
-        <h1 className="text-4xl font-serif font-black text-[#3B1F0A] mb-3">Login / Signup</h1>
-        <p className="text-[#8B5E3C] text-sm font-medium">Use your mobile number or Google account to continue.</p>
-      </div>
-
-      <div className="relative">
+      <div className="relative w-full">
         <div className={`transition-all duration-500 absolute w-full ${step === 'PHONE' ? 'opacity-100 z-10 translate-x-0' : 'opacity-0 -z-10 -translate-x-8 pointer-events-none'}`}>
           <PhoneLogin 
             onSuccess={(p) => {
@@ -37,8 +32,8 @@ export function AuthCanvas() {
             setIsLoading={setIsLoading}
           />
 
-          <div className="my-8 flex items-center gap-4 before:h-[1px] before:flex-1 before:bg-[#F5E6CC] after:h-[1px] after:flex-1 after:bg-[#F5E6CC]">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#A17C5F]">OR</span>
+          <div className="my-7 flex items-center gap-3 before:h-[1px] before:flex-1 before:bg-[#e4d4c4] after:h-[1px] after:flex-1 after:bg-[#e4d4c4]">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-[#7a5e4b]">OR</span>
           </div>
 
           <GoogleLogin />
@@ -58,13 +53,13 @@ export function AuthCanvas() {
         {/* Placeholder to reserve height for absolute positioning */}
         <div className="invisible">
           <PhoneLogin onSuccess={() => {}} isLoading={false} setIsLoading={() => {}} />
-          <div className="my-8 h-[20px]" />
+          <div className="my-7 h-[1px]" />
           <GoogleLogin />
         </div>
       </div>
 
-      <p className="mt-12 text-center text-[10px] uppercase font-black tracking-widest text-[#A17C5F]/60">
-        By continuing, you agree to our <br className="md:hidden"/> Terms of Service & Privacy Policy.
+      <p className="mt-8 text-center text-[11px] font-medium text-[#7a5e4b]">
+        By continuing, you agree to our <span className="text-[#a87442]">Terms of<br/>Service</span> & <span className="text-[#a87442]">Privacy Policy</span>.
       </p>
     </div>
   );

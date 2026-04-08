@@ -1,21 +1,31 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
 
 /**
- * Next.js 16 Middleware logic.
- * Lightweight route protection and redirection.
+ * Next.js Middleware - Safe Version
+ * Allows public routes (/, /menu, /about, /contact, /api, /_next)
+ * Protects only /admin routes and /account
  */
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // 1. Setup Supabase Client
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   });
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return response;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {
@@ -38,40 +48,69 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  // Admin Route Protection
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    // 1. Skip protection for login page to avoid redirect loops
-    if (request.nextUrl.pathname === '/admin/login' || request.nextUrl.pathname === '/admin/login/forgot-password') {
+  // 1. 🔒 Protect Admin Routes (MUST COME FIRST)
+  if (pathname.startsWith('/admin')) {
+    if (pathname === '/admin/login' || pathname === '/admin/login/forgot-password') {
       return response;
     }
-
-    // 2. Redirect to login if unauthenticated
+    
+    // Redirect if not logged in
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = '/admin/login';
-      url.searchParams.set('returnTo', request.nextUrl.pathname);
+      url.searchParams.set('redirect', pathname);
       return NextResponse.redirect(url);
     }
-  }
+    
+    // Basic Middleware role check for early bounce (Server-Side Guards still double-check)
+    const { data: adminUser } = await supabase
+      .from('admin_users')
+      .select('role')
+      .eq('auth_user_id', user.id)
+      .single();
 
-  // API protection for /api/admin
-  if (request.nextUrl.pathname.startsWith('/api/admin')) {
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 401 });
+    if (!adminUser || !['owner', 'manager', 'staff'].includes(adminUser.role.toLowerCase())) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin/login';
+      url.searchParams.set('reason', 'unauthorized');
+      return NextResponse.redirect(url);
     }
+
+    return response;
   }
 
+  // 1.5 🔒 Protect Admin APIs strictly
+  if (pathname.startsWith('/api/admin')) {
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    // API Role verification
+    const { data: adminUser } = await supabase
+      .from('admin_users')
+      .select('role')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (!adminUser || !['owner', 'manager', 'staff'].includes(adminUser.role.toLowerCase())) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    return response;
+  }
+
+  // 2. 🔒 Protect User Account Page
+  if (pathname.startsWith('/account') && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    url.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(url);
+  }
+
+  // 3. ✅ Global Allow for all other routes (Home, Menu, About, Contact, etc.)
   return response;
 }
 
-// Config to match only relevant routes
 export const config = {
-  matcher: [
-    '/admin/:path*',
-    '/api/admin/:path*',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

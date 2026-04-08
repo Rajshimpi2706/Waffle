@@ -220,8 +220,7 @@ export function OTPVerify({ phone, onBack, isLoading, setIsLoading }: OTPVerifyP
 
       <Button 
         onClick={() => handleVerify(otp.join(''))}
-        size="xl"
-        className="w-full h-16 rounded-[1.5rem] shadow-premium hover:shadow-[#C17839]/20 bg-[#3B1F0A] hover:bg-black text-white border-none group transition-all active:scale-95 text-lg font-black mt-4"
+        className="w-full h-[52px] rounded-full shadow-[0_4px_14px_rgba(42,19,6,0.3)] bg-[#2a1306] hover:bg-[#1a0a03] text-white border-none group transition-all active:scale-[0.98] mt-4 font-normal text-[15px]"
         loading={isLoading}
         disabled={otp.join('').length < 6 || isLoading}
       >

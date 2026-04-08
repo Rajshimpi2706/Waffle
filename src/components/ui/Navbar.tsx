@@ -61,11 +61,10 @@ export function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b border-[#F5E6CC]/20 ${
-          isScrolled 
-            ? 'bg-white shadow-[0_2px_20px_rgba(59,31,10,0.08)] py-3 md:py-4' 
-            : 'bg-[#FDF6EC]/80 backdrop-blur-xl py-4 md:py-8'
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b border-[#F5E6CC]/20 py-3 md:py-4 ${isScrolled
+            ? 'bg-white shadow-[0_2px_20px_rgba(59,31,10,0.08)]'
+            : 'bg-[#FDF6EC]/80 backdrop-blur-xl'
+          }`}
       >
         <div className="safe-container">
           <div className="flex items-center justify-between">
@@ -85,9 +84,8 @@ export function Navbar() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 hover:text-[#C17839] relative group/link px-2 py-1 ${
-                    pathname === link.href ? 'text-[#C17839]' : 'text-[#8B5E3C]'
-                  }`}
+                  className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 hover:text-[#C17839] relative group/link px-2 py-1 ${pathname === link.href ? 'text-[#C17839]' : 'text-[#8B5E3C]'
+                    }`}
                 >
                   {link.name}
                   <span className={`absolute bottom-0 left-0 w-full h-[1.5px] bg-[#C17839] transition-transform duration-500 scale-x-0 group-hover/link:scale-x-100 origin-right group-hover/link:origin-left ${pathname === link.href ? 'scale-x-100' : ''}`} />
@@ -99,7 +97,7 @@ export function Navbar() {
             <div className="flex items-center gap-2 md:gap-4">
               {/* User Identity Toggle */}
               {user ? (
-                <Link 
+                <Link
                   href="/account"
                   className="hidden md:flex relative px-4 py-2.5 bg-[#FDF6EC] text-[#3B1F0A] hover:bg-[#C17839] hover:text-white rounded-2xl transition-all duration-500 group/user items-center justify-center font-bold text-xs uppercase tracking-widest gap-2"
                 >
@@ -107,7 +105,7 @@ export function Navbar() {
                   Profile
                 </Link>
               ) : (
-                <Link 
+                <Link
                   href="/login"
                   className="hidden md:flex relative px-6 py-2.5 bg-[#3B1F0A] text-white hover:bg-black rounded-2xl transition-all duration-500 group/login items-center justify-center font-bold text-xs uppercase tracking-widest"
                 >
@@ -116,7 +114,7 @@ export function Navbar() {
               )}
 
               {/* Cart Toggle */}
-              <button 
+              <button
                 onClick={() => document.dispatchEvent(new CustomEvent('open-cart'))}
                 className="relative p-3 text-[#3B1F0A] hover:bg-[#FDF6EC] hover:text-[#C17839] rounded-2xl transition-all duration-500 group/cart flex items-center justify-center min-h-[50px] min-w-[50px]"
               >
@@ -142,21 +140,19 @@ export function Navbar() {
       </header>
 
       {/* Mobile Menu Overlay Architecture */}
-      <div 
-        className={`fixed inset-0 z-40 bg-white/98 backdrop-blur-2xl transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] md:hidden flex flex-col pt-32 px-10 ${
-          isMobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
-        }`}
+      <div
+        className={`fixed inset-0 z-40 bg-white/98 backdrop-blur-2xl transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] md:hidden flex flex-col pt-32 px-10 ${isMobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
+          }`}
       >
         <div className="space-y-10">
-           <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.4em] opacity-40">Main Menu</p>
-           <nav className="flex flex-col gap-8">
+          <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.4em] opacity-40">Main Menu</p>
+          <nav className="flex flex-col gap-8">
             {navLinks.map((link, idx) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`text-4xl font-serif font-black tracking-tighter transition-all duration-500 flex items-center justify-between group ${
-                  pathname === link.href ? 'text-[#C17839]' : 'text-[#3B1F0A]'
-                }`}
+                className={`text-4xl font-serif font-black tracking-tighter transition-all duration-500 flex items-center justify-between group ${pathname === link.href ? 'text-[#C17839]' : 'text-[#3B1F0A]'
+                  }`}
                 style={{ transitionDelay: `${idx * 100}ms` }}
               >
                 {link.name}
@@ -165,15 +161,15 @@ export function Navbar() {
             ))}
           </nav>
         </div>
-        
+
         <div className="mt-auto pb-16 space-y-6">
-           <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.4em] opacity-40">Shopping Bag</p>
-           <Link href="/checkout" className="block w-full">
-             <Button variant="primary" size="lg" className="w-full h-16 rounded-3xl bg-[#3B1F0A] text-white flex items-center justify-between px-8 shadow-premium">
-               <span className="font-bold tracking-widest text-xs uppercase">View Cart</span>
-               <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-black">{cartItemCount} ITEMS</span>
-             </Button>
-           </Link>
+          <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.4em] opacity-40">Shopping Bag</p>
+          <Link href="/checkout" className="block w-full">
+            <Button variant="primary" size="lg" className="w-full h-16 rounded-3xl bg-[#3B1F0A] text-white flex items-center justify-between px-8 shadow-premium">
+              <span className="font-bold tracking-widest text-xs uppercase">View Cart</span>
+              <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-black">{cartItemCount} ITEMS</span>
+            </Button>
+          </Link>
         </div>
       </div>
     </>
