@@ -10,13 +10,13 @@ export const metadata = {
 export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row w-full bg-[#fdfaf5] overflow-hidden font-sans relative">
-      
+
       {/* Left Side: Brand & Trust Copy */}
       <div className="w-full md:w-[42%] lg:w-[38%] bg-gradient-to-br from-[#1e0d06] via-[#2a1306] to-[#3d1f0a] text-white p-8 md:p-14 lg:p-20 flex flex-col relative overflow-hidden shrink-0 z-10 border-r border-white/5 shadow-2xl">
-        
+
         {/* Animated Amber Glow */}
         <div className="absolute -bottom-[10%] left-[10%] w-[130%] h-[60%] bg-[#b47a46] rounded-full blur-[120px] opacity-30 pointer-events-none animate-pulse" />
-        
+
         <div className="relative z-10 flex flex-col h-full">
           <Link href="/" className="inline-block group cursor-pointer mb-16 md:mb-24 transition-transform hover:scale-105">
             <div className="flex items-center gap-4">
@@ -26,7 +26,7 @@ export default function LoginPage() {
                 </svg>
               </div>
               <div>
-                <span className="font-serif text-3xl md:text-4xl font-black tracking-tight text-white/95 leading-none">
+                <span className="font-serif text-5xl md:text-4xl font-black tracking-tight text-white/95 leading-none">
                   Waffle Wala
                 </span>
                 <p className="text-[10px] uppercase tracking-[0.4em] text-[#C17839] mt-1.5 font-black">
@@ -80,18 +80,18 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side: Auth Form with Premium Background */}
-      <div className="w-full md:w-[58%] lg:w-[62%] relative flex items-center justify-center min-h-screen px-4 md:px-12 bg-white overflow-hidden">
-        
+      <div className="w-full md:w-[58%] lg:w-[62%] relative flex items-start justify-center min-h-screen px-4 md:px-12 bg-white overflow-hidden pt-12 md:pt-24 lg:pt-32">
+
         {/* The Waffle Background Image */}
         <div className="absolute inset-0 z-0">
-          <img 
-            src="/images/waffle-auth-bg.png" 
-            alt="Waffle Background" 
+          <img
+            src="/images/waffle-auth-bg.png"
+            alt="Waffle Background"
             className="w-full h-full object-cover scale-110 blur-[2px] opacity-90"
           />
           {/* Subtle overlay to soften the image and match the cream depth */}
           <div className="absolute inset-0 bg-[#fdfaf5]/40 backdrop-blur-[1px]" />
-          
+
           {/* Warm gradients to blend edges */}
           <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-[#f5e6d3]/60 rounded-full blur-[120px] pointer-events-none translate-x-1/4 -translate-y-1/4" />
           <div className="absolute bottom-0 right-0 w-[60%] h-[60%] bg-[#ebd3b9]/50 rounded-full blur-[130px] pointer-events-none translate-x-1/4 translate-y-1/4" />
