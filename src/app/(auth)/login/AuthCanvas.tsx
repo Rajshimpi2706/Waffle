@@ -14,9 +14,9 @@ export function AuthCanvas() {
     <div className="w-full mx-auto animate-fade-in relative z-20 flex flex-col">
       
       {/* Header sections fully centered to match image */}
-      <div className="text-center mb-8 mt-2">
-        <h1 className="text-[2.2rem] font-serif font-bold text-[#2a1306] mb-3 tracking-tight">Login / Signup</h1>
-        <p className="text-[#4a2e1b] text-[14.5px] max-w-[260px] mx-auto leading-snug">
+      <div className="text-center mb-10">
+        <h1 className="text-[2.5rem] font-serif font-black text-[#2a1306] mb-3 tracking-tight">Login / Signup</h1>
+        <p className="text-[#634832] text-[15px] max-w-[280px] mx-auto leading-relaxed">
           Use your mobile number or Google account to continue.
         </p>
       </div>
