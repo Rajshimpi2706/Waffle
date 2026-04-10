@@ -155,7 +155,9 @@ export function TrackClient({ initialOrder, phoneLast4 }: TrackClientProps) {
     const fetchLatestStatus = async () => {
       try {
         // Use order.id (UUID) to bypass the phone verification check in the API
-        const res = await fetch(`/api/orders/${order.id}`);
+        // Add cache busting and cache: 'no-store' to ensure we get live data from the server, 
+        // mitigating Next.js Client Route Cache and browser fetch caching.
+        const res = await fetch(`/api/orders/${order.id}?t=${Date.now()}`, { cache: 'no-store' });
         if (res.ok) {
           const result = await res.json();
           if (result.data) {

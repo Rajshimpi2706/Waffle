@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { ApiResponse, Order } from '@/types';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 /**
  * GET /api/orders/[id]
  * Fetch a single order by UUID or Order Number.
