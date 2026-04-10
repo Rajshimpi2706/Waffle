@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import { OrderStatus, Order } from '@/types';
 import { Check, AlertCircle, ShoppingBag, ChefHat, Bike, Gift } from 'lucide-react';
