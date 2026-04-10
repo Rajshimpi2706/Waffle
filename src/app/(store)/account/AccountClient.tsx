@@ -233,7 +233,14 @@ export function AccountClient({ user, customer, orders, addresses }: AccountClie
                     <form onSubmit={handleAddAddress} className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <input name="full_name" placeholder="Receiver Name" className="p-3 border rounded-xl w-full" required />
-                        <input name="phone" placeholder="Phone Number" className="p-3 border rounded-xl w-full" required />
+                        <input 
+                          name="phone" 
+                          placeholder="Phone Number" 
+                          className="p-3 border rounded-xl w-full" 
+                          required 
+                          pattern="[6-9][0-9]{9}"
+                          title="Please enter a valid 10-digit Indian mobile number (e.g., 9876543210)"
+                        />
                       </div>
                       <input name="line1" placeholder="House No, Building, Street" className="p-3 border rounded-xl w-full" required />
                       <input name="line2" placeholder="Locality / Landmark (Optional)" className="p-3 border rounded-xl w-full" />
@@ -301,10 +308,14 @@ export function AccountClient({ user, customer, orders, addresses }: AccountClie
                   <div>
                     <label className="block text-sm text-[#8B5E3C] mb-1">Phone</label>
                     <input 
+                      type="tel"
                       className="w-full p-3 bg-white rounded-xl border border-[#F0E0C8] focus:border-[#C17839] outline-none"
                       value={profileData.phone}
-                      onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                      onChange={(e) => setProfileData({...profileData, phone: e.target.value.replace(/\D/g, '')})}
                       required
+                      pattern="[6-9][0-9]{9}"
+                      title="10-digit Indian mobile number"
+                      maxLength={10}
                     />
                   </div>
                   <div className="flex gap-3 pt-4">

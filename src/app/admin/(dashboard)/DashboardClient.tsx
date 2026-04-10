@@ -232,11 +232,15 @@ export function DashboardClient() {
                         <p className="font-bold text-[#3B1F0A] text-sm">
                           {order.customer?.full_name || 'Anonymous'}
                         </p>
-                        {order.customer?.phone && (
-                          <p className="text-[11px] text-[#C17839] font-semibold mt-0.5">
-                            📞 {order.customer.phone}
-                          </p>
-                        )}
+                        {(() => {
+                          const phone = order.customer?.phone;
+                          if (!phone || String(phone).length < 5) return null;
+                          return (
+                            <p className="text-[11px] text-[#C17839] font-semibold mt-0.5">
+                              📞 {phone}
+                            </p>
+                          );
+                        })()}
                       </td>
                       <td className="px-8 py-5">
                         <span className="px-3 py-1 rounded-lg bg-[#FDF6EC] text-[#3B1F0A] text-[10px] font-black uppercase tracking-widest border border-[#F5E6CC]">

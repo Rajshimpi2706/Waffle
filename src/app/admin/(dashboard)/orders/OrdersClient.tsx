@@ -229,9 +229,13 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
                     </td>
                     <td className="px-10 py-8">
                       <p className="font-bold text-[#3B1F0A] tracking-tight">{order.shipping_address?.full_name || order.customer?.full_name || 'Anonymous Guest'}</p>
-                      {(order.shipping_address?.phone || order.customer?.phone) && (
-                        <p className="text-[12px] font-semibold text-[#C17839] mt-1">📞 {order.shipping_address?.phone || order.customer?.phone}</p>
-                      )}
+                      {(() => {
+                        const phone = order.shipping_address?.phone || order.customer?.phone;
+                        if (!phone || String(phone).length < 5) return null;
+                        return (
+                          <p className="text-[12px] font-semibold text-[#C17839] mt-1">📞 {phone}</p>
+                        );
+                      })()}
                       <div className="flex items-center gap-2 mt-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#C17839] opacity-40" />
                         <span className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest opacity-60">{order.order_type}</span>
@@ -282,9 +286,13 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
 
               <div className="bg-[#FDF6EC]/50 rounded-2xl p-4 space-y-2">
                 <p className="font-bold text-[#3B1F0A] text-sm">{order.shipping_address?.full_name || order.customer?.full_name || 'Anonymous Guest'}</p>
-                {(order.shipping_address?.phone || order.customer?.phone) && (
-                  <p className="text-xs font-semibold text-[#8B5E3C]">📞 {order.shipping_address?.phone || order.customer?.phone}</p>
-                )}
+                {(() => {
+                  const phone = order.shipping_address?.phone || order.customer?.phone;
+                  if (!phone || String(phone).length < 5) return null;
+                  return (
+                    <p className="text-xs font-semibold text-[#8B5E3C]">📞 {phone}</p>
+                  );
+                })()}
                 <div className="flex flex-wrap gap-2 pt-1">
                   {order.order_items?.map((item: any, idx: number) => (
                     <span key={idx} className="bg-white px-2 py-1 rounded-lg text-[9px] font-black uppercase text-[#8B5E3C] border border-[#F5E6CC shadow-xs]">
