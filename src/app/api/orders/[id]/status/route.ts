@@ -56,15 +56,17 @@ export async function PATCH(
     const timestampField = `${newStatus}_at`;
     updateData[timestampField] = new Date().toISOString();
 
-    // Perform update
-    const { error: updateError } = await supabase
+    // Perform update and SELECT the updated row to ensure RLS didn't silently block it
+    const { data: updatedOrder, error: updateError } = await supabase
       .from('orders')
       .update(updateData)
-      .eq('id', id);
+      .eq('id', id)
+      .select('status')
+      .single();
 
-    if (updateError) {
+    if (updateError || !updatedOrder) {
       console.error('Error updating order status:', updateError);
-      return NextResponse.json({ error: 'Failed to update status' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to update status. Please check your Supabase RLS policies for the "orders" table.' }, { status: 500 });
     }
 
     // Audit Logging (non-blocking)
