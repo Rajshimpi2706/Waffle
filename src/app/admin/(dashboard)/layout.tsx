@@ -28,9 +28,22 @@ export default async function AdminLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-[#FDF6EC] flex">
-      {/* Premium Sidebar Architecture */}
-      <aside className="w-80 p-8 hidden lg:flex flex-col fixed inset-y-0 z-10">
+    <div className="min-h-screen bg-[#FDF6EC] flex flex-col lg:flex-row overflow-x-hidden">
+      
+      {/* Mobile Sticky Header */}
+      <header className="lg:hidden sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-[#F5E6CC] px-6 h-20 flex items-center justify-between">
+        <Link href="/admin" className="block group">
+          <span className="font-serif text-2xl font-black tracking-tighter text-[#3B1F0A]">
+            Waffle<span className="text-[#C17839]">Wala</span>
+          </span>
+        </Link>
+        <div className="w-10 h-10 rounded-xl bg-[#3B1F0A] text-white flex items-center justify-center font-serif font-black text-sm shadow-md">
+          {user?.email?.charAt(0).toUpperCase() || 'A'}
+        </div>
+      </header>
+
+      {/* Premium Sidebar (Desktop Only) */}
+      <aside className="w-80 p-8 hidden lg:flex flex-col fixed inset-y-0 z-10 transition-all">
         <div className="flex-1 bg-white rounded-[3rem] border border-[#F5E6CC] shadow-premium flex flex-col overflow-hidden">
           
           <div className="p-10 border-b border-[#FDF6EC]">
@@ -77,11 +90,32 @@ export default async function AdminLayout({
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 lg:ml-80 p-8 lg:p-16 h-screen overflow-y-auto">
+      <main className="flex-1 lg:ml-80 p-4 sm:p-8 lg:p-16 h-full lg:h-screen lg:overflow-y-auto mb-20 lg:mb-0">
         <div className="max-w-7xl mx-auto">
           {children}
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-xl border-t border-[#F5E6CC] flex items-center justify-around px-2 py-3 pb-safe-area-inset-bottom">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex flex-col items-center gap-1.5 px-3 py-1 flex-1 transition-all active:scale-90"
+            >
+              <div className="p-2 rounded-xl transition-colors">
+                <Icon size={20} className="text-[#3B1F0A]" />
+              </div>
+              <span className="text-[9px] font-black uppercase tracking-tighter text-[#A17C5F]">
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }

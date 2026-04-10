@@ -47,13 +47,13 @@ export function CustomersClient({ initialCustomers }: { initialCustomers: any[] 
   };
 
   return (
-    <div className="space-y-8 animate-fade-in text-[#3B1F0A] pb-20">
+    <div className="space-y-6 lg:space-y-8 animate-fade-in text-[#3B1F0A] pb-24 lg:pb-20">
       
       {/* Premium Controls Architecture */}
-      <div className="bg-white rounded-[2.5rem] p-6 lg:p-8 shadow-soft border border-[#F5E6CC] flex flex-col sm:flex-row gap-6 justify-between items-center relative overflow-hidden">
+      <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] p-5 lg:p-8 shadow-soft border border-[#F5E6CC] flex flex-col lg:flex-row gap-5 lg:gap-6 justify-between items-center relative overflow-hidden">
         <div className="absolute top-0 left-0 w-1.5 h-full bg-[#C17839]/10" />
         
-        <div className="relative w-full sm:w-96 group">
+        <div className="relative w-full lg:w-96 group">
            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C17839] group-focus-within:scale-110 transition-transform" size={18} />
            <Input 
              placeholder="Search by name or connection string..." 
@@ -66,15 +66,15 @@ export function CustomersClient({ initialCustomers }: { initialCustomers: any[] 
         <Button 
           onClick={handleExportCSV} 
           variant="outline" 
-          className="h-14 rounded-2xl border-[#F5E6CC] flex gap-3 px-8 text-[#3B1F0A] font-black uppercase tracking-widest text-[10px] hover:bg-[#FDF6EC] hover:shadow-soft transition-all active:scale-95 group w-full sm:w-auto"
+          className="h-14 rounded-2xl border-[#F5E6CC] flex gap-3 px-8 text-[#3B1F0A] font-black uppercase tracking-widest text-[10px] hover:bg-[#FDF6EC] hover:shadow-soft transition-all active:scale-95 group w-full lg:w-auto"
         >
           <Download size={16} className="group-hover:-translate-y-1 transition-transform" /> 
           Export Database
         </Button>
       </div>
 
-      {/* Premium Table Architecture */}
-      <div className="bg-white rounded-[3rem] shadow-medium border border-[#F5E6CC] overflow-hidden relative">
+      {/* Desktop Table View */}
+      <div className="hidden lg:block bg-white rounded-[3rem] shadow-medium border border-[#F5E6CC] overflow-hidden relative">
         <div className="overflow-x-auto min-h-[500px]">
           <table className="w-full text-sm text-left align-middle">
             <thead className="bg-[#FDF6EC]/50">
@@ -90,15 +90,7 @@ export function CustomersClient({ initialCustomers }: { initialCustomers: any[] 
               {filteredCustomers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-10 py-24 text-center">
-                    <div className="flex flex-col items-center gap-6 animate-fade-in">
-                       <div className="w-20 h-20 bg-[#FDF6EC] rounded-[2rem] flex items-center justify-center text-[#F5E6CC]">
-                          <Users size={48} />
-                       </div>
-                       <div>
-                          <p className="text-2xl font-serif font-black text-[#3B1F0A]">No Clients Detected</p>
-                          <p className="text-[#8B5E3C] mt-2 font-medium italic opacity-60">"The catalog is empty. Time for a marketing blast?"</p>
-                       </div>
-                    </div>
+                    <EmptyCustomersState />
                   </td>
                 </tr>
               ) : (
@@ -137,7 +129,66 @@ export function CustomersClient({ initialCustomers }: { initialCustomers: any[] 
           </table>
         </div>
       </div>
+
+      {/* Mobile Card View */}
+      <div className="lg:hidden space-y-4">
+        {filteredCustomers.length === 0 ? (
+          <div className="bg-white rounded-[2rem] p-12 lg:p-24 border border-[#F5E6CC] text-center shadow-soft">
+            <EmptyCustomersState />
+          </div>
+        ) : (
+          filteredCustomers.map((customer) => (
+            <div key={customer.id} className="bg-white rounded-[2rem] p-6 shadow-soft border border-[#F5E6CC] space-y-4 active:scale-[0.98] transition-all">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-serif font-black text-[#3B1F0A] text-lg tracking-tight leading-tight">
+                    {customer.full_name || 'Anonymous Guest'}
+                  </h4>
+                  <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest mt-0.5 opacity-60">
+                    {customer.phone || 'Connection Unverified'}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-serif font-black text-[#C17839] text-base">{customer.total_spend > 0 ? formatCurrency(customer.total_spend) : '₹0.00'}</p>
+                  <p className="text-[8px] font-black text-[#A17C5F] uppercase tracking-widest">Lifetime</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[#FDF6EC]">
+                <div className="space-y-1">
+                  <p className="text-[8px] font-black text-[#A17C5F] uppercase tracking-widest opacity-50">Frequency</p>
+                  {customer.total_orders > 0 ? (
+                    <p className="text-[10px] font-black text-[#3B1F0A] uppercase tracking-tighter">{customer.total_orders} Orders</p>
+                  ) : (
+                    <p className="text-[10px] font-bold text-[#F5E6CC] italic uppercase tracking-tighter">Passive</p>
+                  )}
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-[8px] font-black text-[#A17C5F] uppercase tracking-widest opacity-50">Last Seen</p>
+                  <p className="text-[10px] font-black text-[#3B1F0A] uppercase tracking-tighter">
+                    {customer.last_order_at ? format(new Date(customer.last_order_at), 'dd MMM, yy') : 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
       
+    </div>
+  );
+}
+
+function EmptyCustomersState() {
+  return (
+    <div className="flex flex-col items-center gap-6 animate-fade-in">
+       <div className="w-16 lg:w-20 h-16 lg:h-20 bg-[#FDF6EC] rounded-[1.5rem] lg:rounded-[2rem] flex items-center justify-center text-[#F5E6CC]">
+          <Users size={40} />
+       </div>
+       <div>
+          <p className="text-xl lg:text-2xl font-serif font-black text-[#3B1F0A]">No Clients Detected</p>
+          <p className="text-[#8B5E3C] mt-2 font-medium italic opacity-60 text-sm lg:text-base">"The catalog is empty. Time for a marketing blast?"</p>
+       </div>
     </div>
   );
 }

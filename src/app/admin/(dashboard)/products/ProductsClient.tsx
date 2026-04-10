@@ -149,10 +149,10 @@ export function ProductsClient({ initialProducts, categories, adminRole }: Produ
   });
 
   return (
-    <div className="space-y-10 animate-fade-in text-[#3B1F0A] pb-20">
+    <div className="space-y-6 lg:space-y-10 animate-fade-in text-[#3B1F0A] pb-24 lg:pb-20">
       
       {/* Premium Search & Actions Architecture */}
-      <div className="flex flex-col lg:flex-row gap-6 items-center justify-between bg-white p-6 lg:p-8 rounded-[2.5rem] border border-[#F5E6CC] shadow-soft relative overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-6 items-center justify-between bg-white p-5 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] border border-[#F5E6CC] shadow-soft relative overflow-hidden">
         <div className="absolute top-0 left-0 w-1.5 h-full bg-[#C17839]/10" />
         
         <div className="flex flex-col sm:flex-row flex-1 gap-4 w-full">
