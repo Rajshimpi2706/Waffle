@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { ReactToastProvider } from '@/components/ui/Toast';
+import { SupabaseLockErrorSuppressor } from '@/components/ui/SupabaseLockErrorSuppressor';
 import { cn } from '@/lib/utils';
 
 const inter = Inter({
@@ -41,6 +42,7 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth" className={cn('h-full scroll-smooth', inter.variable, playfair.variable)}>
       <body className="min-h-full flex flex-col font-sans antialiased text-[#3B1F0A] bg-[#FDF6EC]">
+        <SupabaseLockErrorSuppressor />
         {children}
         <ReactToastProvider />
       </body>
