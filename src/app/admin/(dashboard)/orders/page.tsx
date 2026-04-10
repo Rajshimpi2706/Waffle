@@ -7,6 +7,9 @@ export const metadata = {
   title: 'Orders Management | Waffle House Admin',
 };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AdminOrdersPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

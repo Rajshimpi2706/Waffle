@@ -12,6 +12,8 @@ import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 
+import { useRouter } from 'next/navigation';
+
 interface OrdersClientProps {
   initialOrders: any[];
   adminRole: string; // 'owner' | 'manager' | 'staff'
@@ -21,7 +23,13 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
   const [orders, setOrders] = useState(initialOrders);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('active'); // 'all', 'active', 'completed', 'cancelled'
+  const router = useRouter();
   
+  // Sync local state when server data updates (e.g., after router.refresh())
+  useEffect(() => {
+    setOrders(initialOrders);
+  }, [initialOrders]);
+
   // Realtime updates
   useEffect(() => {
     const supabase = createClient();
@@ -36,7 +44,8 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
              toast.info(`Order ${payload.new.order_number} status changed to ${payload.new.status}`);
           } else if (payload.eventType === 'INSERT') {
              toast.success(`New Order received: ${payload.new.order_number}`);
-             // We could fetch the full object here, but a manual refresh is safer for complex joins
+             // Auto-refresh the server component to fetch full complex joins
+             router.refresh();
           }
         }
       )
@@ -45,7 +54,7 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, []);
+  }, [router]);
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
