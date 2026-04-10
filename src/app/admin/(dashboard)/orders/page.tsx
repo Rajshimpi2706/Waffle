@@ -25,23 +25,20 @@ export default async function AdminOrdersPage() {
     redirect('/admin/login?reason=unauthorized');
   }
 
-  // Pre-fetch today's orders server-side to limit client-side waterfalls
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
+  // Fetch ALL orders server-side (no date filter)
   const { data: initialOrders } = await supabase
     .from('orders')
     .select(`
       *,
-      customer:customers(full_name),
+      customer:customers(full_name, phone, email),
       order_items(
         *,
         product:products(name)
       ),
       payment:payments(status)
     `)
-    .gte('created_at', today.toISOString())
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(200);
 
   return (
     <div className="max-w-7xl mx-auto">

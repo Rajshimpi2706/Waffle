@@ -1,22 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
-import { OrderStatus } from '@/types';
 
-const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  pending: ['confirmed', 'cancelled'],
-  confirmed: ['preparing', 'cancelled'],
-  preparing: ['ready', 'cancelled'],
-  ready: ['out_for_delivery', 'delivered'],
-  out_for_delivery: ['delivered', 'failed'],
-  delivered: [],
-  cancelled: [],
-  refunded: [],
-  failed: [],
-};
+const VALID_STATUSES = ['pending', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'delivered', 'cancelled', 'failed', 'refunded'];
 
 /**
  * PATCH /api/orders/[id]/status
- * Securely update order status with transition validation and auto-timestamps.
+ * Admin can freely update order status.
  */
 export async function PATCH(
   request: Request,
@@ -25,7 +14,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { newStatus } = body as { newStatus: OrderStatus };
+    const { newStatus } = body as { newStatus: string };
 
     if (!newStatus) {
       return NextResponse.json({ error: 'New status is required' }, { status: 400 });
@@ -38,18 +27,13 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 401 });
     }
 
-    if (!VALID_TRANSITIONS[newStatus]) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
-    }
-
-    // Optional: Restrict cancellations to owners/managers if desired
-    if (newStatus === 'cancelled' && !['owner', 'manager'].includes(role)) {
-       return NextResponse.json({ error: 'Forbidden. Only managers can cancel orders.' }, { status: 403 });
+    if (!VALID_STATUSES.includes(newStatus)) {
+      return NextResponse.json({ error: 'Invalid status value' }, { status: 400 });
     }
 
     const supabase = await createServiceClient();
 
-    // 1. Fetch current order state
+    // Fetch current order to get order_number for logging
     const { data: order, error: fetchError } = await supabase
       .from('orders')
       .select('status, order_number')
@@ -60,28 +44,19 @@ export async function PATCH(
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    const currentStatus = order.status as OrderStatus;
+    const previousStatus = order.status;
 
-    // 2. Validate Transition
-    const allowed = VALID_TRANSITIONS[currentStatus];
-    if (!allowed.includes(newStatus)) {
-      return NextResponse.json(
-        { error: `Invalid transition: ${currentStatus} -> ${newStatus}` },
-        { status: 400 }
-      );
-    }
-
-    // 3. Update Data Preparation
-    const updateData: any = {
+    // Build update payload
+    const updateData: Record<string, any> = {
       status: newStatus,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
 
-    // Auto-set the matching timestamp column
+    // Auto-set the matching timestamp column (e.g., confirmed_at, delivered_at)
     const timestampField = `${newStatus}_at`;
     updateData[timestampField] = new Date().toISOString();
 
-    // 4. Perform Atomic Update
+    // Perform update
     const { error: updateError } = await supabase
       .from('orders')
       .update(updateData)
@@ -92,15 +67,19 @@ export async function PATCH(
       return NextResponse.json({ error: 'Failed to update status' }, { status: 500 });
     }
 
-    // 5. Audit Logging
-    const { logAdminAction } = await import('@/lib/audit');
-    await logAdminAction({
-      action_type: 'ORDER_STATUS_UPDATE',
-      entity_type: 'orders',
-      entity_id: id,
-      previous_value: { status: currentStatus },
-      new_value: { status: newStatus }
-    });
+    // Audit Logging (non-blocking)
+    try {
+      const { logAdminAction } = await import('@/lib/audit');
+      await logAdminAction({
+        action_type: 'ORDER_STATUS_UPDATE',
+        entity_type: 'orders',
+        entity_id: id,
+        previous_value: { status: previousStatus },
+        new_value: { status: newStatus }
+      });
+    } catch (auditErr) {
+      console.warn('Audit log failed (non-critical):', auditErr);
+    }
 
     return NextResponse.json({
       success: true,

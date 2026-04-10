@@ -52,7 +52,7 @@ export async function middleware(request: NextRequest) {
 
   // 1. 🔒 Protect Admin Routes (MUST COME FIRST)
   if (pathname.startsWith('/admin')) {
-    if (pathname === '/admin/login' || pathname === '/admin/login/forgot-password') {
+    if (pathname === '/admin/login' || pathname === '/admin/login/forgot-password' || pathname === '/admin/setup') {
       return response;
     }
     
@@ -83,6 +83,10 @@ export async function middleware(request: NextRequest) {
 
   // 1.5 🔒 Protect Admin APIs strictly
   if (pathname.startsWith('/api/admin')) {
+    // Allow setup route without role check (bootstrap)
+    if (pathname === '/api/admin/setup') {
+      return response;
+    }
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

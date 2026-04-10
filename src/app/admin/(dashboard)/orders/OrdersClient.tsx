@@ -183,6 +183,18 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
                       <p className="font-bold text-[#3B1F0A] tracking-tight">
                         {order.shipping_address?.full_name || order.customer?.full_name || 'Anonymous Guest'}
                       </p>
+                      {/* Phone */}
+                      {(order.shipping_address?.phone || order.customer?.phone) && (
+                        <p className="text-[12px] font-semibold text-[#C17839] mt-1">
+                          📞 {order.shipping_address?.phone || order.customer?.phone}
+                        </p>
+                      )}
+                      {/* Email */}
+                      {order.customer?.email && (
+                        <p className="text-[11px] text-[#A17C5F] mt-0.5 truncate max-w-[180px]">
+                          ✉️ {order.customer.email}
+                        </p>
+                      )}
                       <div className="flex items-center gap-2 mt-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#C17839] opacity-40" />
                         <span className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest opacity-60">
@@ -220,19 +232,19 @@ export function OrdersClient({ initialOrders, adminRole }: OrdersClientProps) {
                             className={cn(
                               "h-12 text-[10px] font-black uppercase tracking-widest rounded-xl border-[#F5E6CC] shadow-soft transition-all",
                               order.status === 'pending' ? 'bg-yellow-50/50 text-yellow-800' :
+                              order.status === 'confirmed' ? 'bg-blue-50/50 text-blue-800' :
                               order.status === 'preparing' ? 'bg-orange-50/50 text-orange-800' :
                               order.status === 'ready' ? 'bg-purple-50/50 text-purple-800' :
                               order.status === 'out_for_delivery' ? 'bg-indigo-50/50 text-indigo-800' : ''
                             )}
                           >
-                             {order.status === 'pending' && <option value="pending">Pending</option>}
-                             {(order.status === 'pending') && <option value="confirmed">Confirm</option>}
-                             {(order.status === 'pending' || order.status === 'confirmed') && <option value="preparing">Prepare</option>}
-                             <option value="ready">Ready</option>
-                             {order.order_type === 'delivery' && <option value="out_for_delivery">Transit</option>}
-                             <option value="delivered">Fulfil</option>
-                             {adminRole !== 'staff' && <option value="cancelled">Cancel</option>}
-                             {adminRole === 'owner' && <option value="failed">Fail</option>}
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="preparing">Preparing</option>
+                            <option value="ready">Ready</option>
+                            <option value="out_for_delivery">Out for Delivery</option>
+                            <option value="delivered">Delivered ✓</option>
+                            <option value="cancelled">Cancelled ✗</option>
                           </Select>
                           <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#22C55E] animate-pulse shadow-sm border border-white" />
                         </div>
