@@ -150,46 +150,39 @@ export function TrackClient({ initialOrder, phoneLast4 }: TrackClientProps) {
   const placedTime = order.created_at ? format(new Date(order.created_at), 'dd MMM, p') : '—';
   const cfg        = STATUS_CONFIG[order.status] ?? STATUS_CONFIG['pending'];
 
-  // ── Real-time Supabase subscription ──────────────────────────────
+  // ── Polling without Supabase Subscription ──────────────────────────────
   useEffect(() => {
-    const supabase = createClient();
+    const fetchLatestStatus = async () => {
+      try {
+        // Use order.id (UUID) to bypass the phone verification check in the API
+        const res = await fetch(`/api/orders/${order.id}`);
+        if (res.ok) {
+          const result = await res.json();
+          if (result.data) {
+            const updated = result.data as Order;
+            if (updated.status !== prevStatus.current) {
+              prevStatus.current = updated.status;
+              setOrder(prev => ({ ...prev, ...updated }));
+              
+              setJustUpdated(true);
+              setTimeout(() => setJustUpdated(false), 1200);
 
-    const channel = supabase
-      .channel(`order-track-${order.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event:  'UPDATE',
-          schema: 'public',
-          table:  'orders',
-          filter: `id=eq.${order.id}`,
-        },
-        (payload) => {
-          const updated = payload.new as Order;
-          if (updated.status !== prevStatus.current) {
-            prevStatus.current = updated.status;
-
-            // Merge new fields into existing order
-            setOrder(prev => ({ ...prev, ...updated }));
-
-            // Flash animation
-            setJustUpdated(true);
-            setTimeout(() => setJustUpdated(false), 1200);
-
-            // Toast notification
-            const newCfg = STATUS_CONFIG[updated.status];
-            toast.success(newCfg?.message || `Order updated: ${updated.status}`, {
-              icon: '🧇',
-              duration: 5000,
-            });
+              const newCfg = STATUS_CONFIG[updated.status];
+              toast.success(newCfg?.message || `Order updated: ${updated.status}`, {
+                icon: '🧇',
+                duration: 5000,
+              });
+            }
           }
         }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
+      } catch (err) {
+        console.error('Failed to poll order status:', err);
+      }
     };
+
+    // Poll every 5 seconds
+    const interval = setInterval(fetchLatestStatus, 5000);
+    return () => clearInterval(interval);
   }, [order.id]);
 
   const handleDownloadReceipt = () => window.print();
