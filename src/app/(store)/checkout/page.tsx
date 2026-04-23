@@ -175,6 +175,25 @@ export default function CheckoutPage() {
         theme: {
           color: '#C17839',
         },
+        config: {
+          display: {
+            blocks: {
+              banks: {
+                name: 'Pay via UPI',
+                instruments: [
+                  {
+                    method: 'upi',
+                    flows: ['collect', 'qr', 'intent'],
+                  },
+                ],
+              },
+            },
+            sequence: ['block.banks'],
+            preferences: {
+              show_default_blocks: true,
+            },
+          },
+        },
         modal: {
           ondismiss: function() {
             // Only reset processing if payment was NOT already successfully handled.

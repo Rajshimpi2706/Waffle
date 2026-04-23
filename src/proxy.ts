@@ -2,11 +2,11 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 /**
- * Next.js Middleware - Safe Version
+ * Next.js Proxy (formerly Middleware) - Safe Version
  * Allows public routes (/, /menu, /about, /contact, /api, /_next)
  * Protects only /admin routes and /account
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. Setup Supabase Client
