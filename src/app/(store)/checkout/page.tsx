@@ -16,7 +16,7 @@ export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCartStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -40,11 +40,11 @@ export default function CheckoutPage() {
         // Try syncing from customers table
         const { data: cust } = await supabase.from('customers').select('name, phone').eq('auth_user_id', user.id).single();
         if (cust) {
-           setFormData(prev => ({
-              ...prev,
-              name: cust.name || prev.name,
-              phone: cust.phone ? cust.phone.replace('+91', '') : prev.phone
-           }));
+          setFormData(prev => ({
+            ...prev,
+            name: cust.name || prev.name,
+            phone: cust.phone ? cust.phone.replace('+91', '') : prev.phone
+          }));
         }
       }
     };
@@ -108,7 +108,7 @@ export default function CheckoutPage() {
       });
 
       const data = await res.json();
-      
+
       if (!res.ok) {
         const error: any = new Error(data.error || 'Failed to create order');
         error.suggestion = data.suggestion;
@@ -175,27 +175,8 @@ export default function CheckoutPage() {
         theme: {
           color: '#C17839',
         },
-        config: {
-          display: {
-            blocks: {
-              banks: {
-                name: 'Pay via UPI',
-                instruments: [
-                  {
-                    method: 'upi',
-                    flows: ['collect', 'qr', 'intent'],
-                  },
-                ],
-              },
-            },
-            sequence: ['block.banks'],
-            preferences: {
-              show_default_blocks: true,
-            },
-          },
-        },
         modal: {
-          ondismiss: function() {
+          ondismiss: function () {
             // Only reset processing if payment was NOT already successfully handled.
             // If the user dismissed AFTER a successful payment, we don't
             // want to interfere — the handler is already routing to success.
@@ -227,10 +208,10 @@ export default function CheckoutPage() {
 
     } catch (err: any) {
       console.error('Checkout error detail:', err);
-      
+
       const errorMsg = err.message || 'An unexpected error occurred. Please try again.';
       const suggestion = err.suggestion || 'Please check your information and try again.';
-      
+
       toast.error(errorMsg, {
         description: suggestion,
         duration: 10000
@@ -268,17 +249,17 @@ export default function CheckoutPage() {
   return (
     <div className="bg-[#FDF6EC] min-h-screen">
       <div className="max-w-7xl mx-auto w-full px-4 py-16 lg:py-24">
-        <Script 
-          src="https://checkout.razorpay.com/v1/checkout.js" 
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
           onLoad={() => setRazorpayLoaded(true)}
           onError={() => toast.error('Failed to load payment system')}
         />
-        
+
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
           <div className="flex-1 space-y-12 animate-fade-in">
             <div className="flex items-center gap-6 mb-4">
-              <button 
-                onClick={() => router.back()} 
+              <button
+                onClick={() => router.back()}
                 className="w-12 h-12 flex items-center justify-center bg-white border border-[#F5E6CC] rounded-2xl shadow-soft hover:shadow-medium hover:-translate-x-1 transition-all text-[#3B1F0A]"
               >
                 <ArrowLeft size={20} />
@@ -297,13 +278,13 @@ export default function CheckoutPage() {
                 </div>
                 Customer Details
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3">
                   <label className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest ml-1">Full Name</label>
                   <div className="relative group">
                     <User size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#C17839] group-focus-within:scale-110 transition-transform" />
-                    <Input 
+                    <Input
                       placeholder="Enter your name"
                       className="pl-14 h-14 bg-[#FDF6EC]/30 border-[#F5E6CC] rounded-2xl focus:shadow-premium transition-all text-[#3B1F0A] font-bold"
                       value={formData.name}
@@ -318,7 +299,7 @@ export default function CheckoutPage() {
                   <label className="text-[10px] font-black text-[#A17C5F] uppercase tracking-widest ml-1">Phone Number</label>
                   <div className="relative group">
                     <Phone size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#C17839] group-focus-within:scale-110 transition-transform" />
-                    <Input 
+                    <Input
                       type="tel"
                       placeholder="10-digit mobile number"
                       className="pl-14 h-14 bg-[#FDF6EC]/30 border-[#F5E6CC] rounded-2xl focus:shadow-premium transition-all text-[#3B1F0A] font-bold"
@@ -350,7 +331,7 @@ export default function CheckoutPage() {
           <div className="w-full lg:w-[450px] space-y-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <div className="bg-white rounded-[3rem] p-10 lg:p-12 shadow-premium border border-[#F5E6CC] lg:sticky lg:top-28 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#FDF6EC] rounded-full -translate-y-1/2 translate-x-1/2 opacity-50" />
-              
+
               <h2 className="text-2xl font-serif font-black text-[#3B1F0A] mb-10 flex items-center gap-4 relative z-10">
                 <div className="w-10 h-10 rounded-xl bg-[#FDF6EC] flex items-center justify-center text-[#C17839]">
                   <ShoppingBag size={20} />
@@ -386,8 +367,8 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <Button 
-                onClick={handlePayment} 
+              <Button
+                onClick={handlePayment}
                 size="xl"
                 className="w-full mt-10 h-16 rounded-[1.5rem] shadow-premium hover:shadow-[#C17839]/20 bg-[#C17839] hover:bg-[#3B1F0A] text-white border-none group transition-all active:scale-95 text-lg font-black"
                 loading={isProcessing}
@@ -400,16 +381,16 @@ export default function CheckoutPage() {
               {!razorpayLoaded && (
                 <div className="mt-6 flex flex-col items-center gap-3 animate-pulse">
                   <div className="flex items-center gap-2 text-[10px] text-[#A17C5F] font-black uppercase tracking-widest">
-                    <Loader2 size={12} className="animate-spin text-[#C17839]" /> 
+                    <Loader2 size={12} className="animate-spin text-[#C17839]" />
                     Initializing Secure Vault
                   </div>
                 </div>
               )}
 
               <div className="mt-8 flex items-center justify-center gap-3 opacity-40">
-                 <div className="h-[1px] flex-1 bg-[#8B5E3C]/20" />
-                 <Star size={10} className="text-[#8B5E3C]" />
-                 <div className="h-[1px] flex-1 bg-[#8B5E3C]/20" />
+                <div className="h-[1px] flex-1 bg-[#8B5E3C]/20" />
+                <Star size={10} className="text-[#8B5E3C]" />
+                <div className="h-[1px] flex-1 bg-[#8B5E3C]/20" />
               </div>
             </div>
           </div>
