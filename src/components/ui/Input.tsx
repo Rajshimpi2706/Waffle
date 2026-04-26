@@ -12,7 +12,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         className={cn(
-          "input-base",
+          // base — font-size 16px prevents iOS Safari auto-zoom on focus
+          "input-base text-base min-h-[44px]",
           error && "error",
           className
         )}

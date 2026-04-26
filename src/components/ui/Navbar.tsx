@@ -67,13 +67,13 @@ export function Navbar() {
           }`}
       >
         <div className="safe-container">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             {/* Logo Architecture */}
-            <Link href="/" className="flex flex-col group relative py-1">
-              <span className="font-serif text-2xl md:text-4xl font-bold tracking-tight text-[#3B1F0A] group-hover:text-[#C17839] transition-colors duration-500 leading-none">
+            <Link href="/" className="flex flex-col group relative py-1 shrink-0">
+              <span className="font-serif text-xl sm:text-2xl md:text-4xl font-bold tracking-tight text-[#3B1F0A] group-hover:text-[#C17839] transition-colors duration-500 leading-none">
                 Waffle<span className="text-[#C17839] group-hover:text-[#3B1F0A] transition-colors duration-500">Wala</span>.
               </span>
-              <span className="text-[11px] md:text-[12px] uppercase font-black tracking-[0.3em] md:tracking-[0.4em] text-[#8B5E3C] opacity-70 mt-1.5 leading-none transition-all duration-500 group-hover:tracking-[0.5em] group-hover:opacity-100">
+              <span className="hidden sm:block text-[11px] md:text-[12px] uppercase font-black tracking-[0.3em] md:tracking-[0.4em] text-[#8B5E3C] opacity-70 mt-1.5 leading-none transition-all duration-500 group-hover:tracking-[0.5em] group-hover:opacity-100">
                 Har Bite Mein Happiness
               </span>
             </Link>
@@ -94,8 +94,9 @@ export function Navbar() {
             </nav>
 
             {/* Premium Actions Architecture */}
-            <div className="flex items-center gap-2 md:gap-4">
-              {/* User Identity Toggle */}
+            <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
+              
+              {/* Desktop-only text Login/Profile button */}
               {user ? (
                 <Link
                   href="/account"
@@ -113,14 +114,35 @@ export function Navbar() {
                 </Link>
               )}
 
+              {/* MOBILE: Always-visible Login / Account icon button — CRITICAL FIX */}
+              {user ? (
+                <Link
+                  href="/account"
+                  aria-label="My Account"
+                  className="md:hidden relative p-2.5 text-[#3B1F0A] bg-[#FDF6EC] hover:bg-[#C17839] hover:text-white rounded-xl transition-all duration-300 flex items-center justify-center min-h-[44px] min-w-[44px] active:scale-95"
+                >
+                  <User size={20} strokeWidth={2} />
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  aria-label="Login"
+                  className="md:hidden relative px-3 py-2 bg-[#3B1F0A] text-white hover:bg-[#C17839] rounded-xl transition-all duration-300 flex items-center justify-center min-h-[44px] font-bold text-[10px] uppercase tracking-widest active:scale-95 gap-1.5"
+                >
+                  <User size={16} strokeWidth={2.5} />
+                  <span className="hidden xs:inline">Login</span>
+                </Link>
+              )}
+
               {/* Cart Toggle */}
               <button
                 onClick={() => document.dispatchEvent(new CustomEvent('open-cart'))}
-                className="relative p-3 text-[#3B1F0A] hover:bg-[#FDF6EC] hover:text-[#C17839] rounded-2xl transition-all duration-500 group/cart flex items-center justify-center min-h-[50px] min-w-[50px]"
+                aria-label="Open cart"
+                className="relative p-2.5 text-[#3B1F0A] hover:bg-[#FDF6EC] hover:text-[#C17839] rounded-xl transition-all duration-500 group/cart flex items-center justify-center min-h-[44px] min-w-[44px] active:scale-95"
               >
-                <ShoppingBag size={22} strokeWidth={2} className="group-hover/cart:scale-110 transition-transform duration-500" />
+                <ShoppingBag size={21} strokeWidth={2} className="group-hover/cart:scale-110 transition-transform duration-500" />
                 {cartItemCount > 0 && (
-                  <span className="absolute top-1 right-1 w-5 h-5 bg-[#3B1F0A] text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-lg transform group-hover/cart:-translate-y-1 transition-transform">
+                  <span className="absolute top-1 right-1 w-5 h-5 bg-[#C17839] text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-lg transform group-hover/cart:-translate-y-0.5 transition-transform">
                     {cartItemCount > 99 ? '99+' : cartItemCount}
                   </span>
                 )}
@@ -128,11 +150,12 @@ export function Navbar() {
 
               {/* Mobile Menu Toggle */}
               <button
-                className="md:hidden p-3 text-[#3B1F0A] bg-[#FDF6EC] rounded-2xl min-h-[50px] min-w-[50px] flex items-center justify-center transition-all active:scale-95"
+                className="md:hidden p-2.5 text-[#3B1F0A] bg-[#FDF6EC] rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center transition-all active:scale-95"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 aria-label="Toggle menu"
+                aria-expanded={isMobileMenuOpen}
               >
-                {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
             </div>
           </div>
@@ -141,35 +164,83 @@ export function Navbar() {
 
       {/* Mobile Menu Overlay Architecture */}
       <div
-        className={`fixed inset-0 z-40 bg-white/98 backdrop-blur-2xl transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] md:hidden flex flex-col pt-32 px-10 ${isMobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
+        className={`fixed inset-0 z-40 bg-white/98 backdrop-blur-2xl transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] md:hidden flex flex-col ${isMobileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-full pointer-events-none'
           }`}
+        aria-hidden={!isMobileMenuOpen}
       >
-        <div className="space-y-10">
-          <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.4em] opacity-40">Main Menu</p>
-          <nav className="flex flex-col gap-8">
-            {navLinks.map((link, idx) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={`text-4xl font-serif font-black tracking-tighter transition-all duration-500 flex items-center justify-between group ${pathname === link.href ? 'text-[#C17839]' : 'text-[#3B1F0A]'
-                  }`}
-                style={{ transitionDelay: `${idx * 100}ms` }}
-              >
-                {link.name}
-                <ArrowRight size={24} className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500" />
-              </Link>
-            ))}
-          </nav>
-        </div>
+        {/* Spacer for fixed header */}
+        <div className="h-16" />
 
-        <div className="mt-auto pb-16 space-y-6">
-          <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.4em] opacity-40">Shopping Bag</p>
-          <Link href="/checkout" className="block w-full">
-            <Button variant="primary" size="lg" className="w-full h-16 rounded-3xl bg-[#3B1F0A] text-white flex items-center justify-between px-8 shadow-premium">
-              <span className="font-bold tracking-widest text-xs uppercase">View Cart</span>
-              <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-black">{cartItemCount} ITEMS</span>
-            </Button>
-          </Link>
+        <div className="flex-1 flex flex-col overflow-y-auto px-6 sm:px-10 pt-8 pb-6">
+          {/* Nav Links */}
+          <div className="space-y-1 mb-8">
+            <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.4em] opacity-40 mb-6">Main Menu</p>
+            <nav className="flex flex-col gap-2">
+              {navLinks.map((link, idx) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={`text-3xl sm:text-4xl font-serif font-black tracking-tighter transition-all duration-300 flex items-center justify-between group py-2 border-b border-[#F5E6CC]/60 ${pathname === link.href ? 'text-[#C17839]' : 'text-[#3B1F0A]'
+                    }`}
+                  style={{ transitionDelay: `${idx * 60}ms` }}
+                >
+                  {link.name}
+                  <ArrowRight size={22} className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-[#C17839]" />
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* Account Section in Mobile Menu — belt-and-suspenders login visibility */}
+          <div className="mt-auto space-y-4">
+            <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.4em] opacity-40">Account</p>
+            {user ? (
+              <div className="flex flex-col gap-3">
+                <Link
+                  href="/account"
+                  className="flex items-center justify-between w-full px-6 py-4 bg-[#FDF6EC] rounded-2xl text-[#3B1F0A] font-bold text-sm uppercase tracking-widest border border-[#F5E6CC] active:scale-95 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <User size={18} />
+                    My Account
+                  </div>
+                  <ArrowRight size={16} className="text-[#C17839]" />
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="w-full px-6 py-4 rounded-2xl text-red-500 font-bold text-sm uppercase tracking-widest border border-red-100 bg-red-50 active:scale-95 transition-all min-h-[52px]"
+                >
+                  {isLoggingOut ? 'Signing out…' : 'Sign Out'}
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="flex items-center justify-center gap-3 w-full px-6 py-4 bg-[#3B1F0A] rounded-2xl text-white font-bold text-sm uppercase tracking-widest active:scale-95 transition-all min-h-[52px]"
+              >
+                <User size={18} />
+                Login / Sign Up
+              </Link>
+            )}
+
+            {/* Cart CTA */}
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                document.dispatchEvent(new CustomEvent('open-cart'));
+              }}
+              className="flex items-center justify-between w-full px-6 py-4 bg-[#C17839] rounded-2xl text-white active:scale-95 transition-all min-h-[52px]"
+            >
+              <div className="flex items-center gap-3">
+                <ShoppingBag size={18} />
+                <span className="font-bold text-sm uppercase tracking-widest">View Cart</span>
+              </div>
+              {cartItemCount > 0 && (
+                <span className="bg-white/25 px-3 py-1 rounded-full text-xs font-black">{cartItemCount} ITEMS</span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </>

@@ -11,7 +11,8 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <textarea
         className={cn(
-          "input-base min-h-[80px] py-3 resize-y",
+          // font-size 16px prevents iOS Safari auto-zoom on focus
+          "input-base min-h-[100px] py-3 resize-y text-base",
           error && "error",
           className
         )}
