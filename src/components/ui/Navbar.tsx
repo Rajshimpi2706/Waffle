@@ -114,26 +114,6 @@ export function Navbar() {
                 </Link>
               )}
 
-              {/* MOBILE: Always-visible Login / Account button */}
-              {user ? (
-                <Link
-                  href="/account"
-                  aria-label="My Account"
-                  className="md:hidden relative p-2.5 text-[#3B1F0A] bg-[#FDF6EC] hover:bg-[#C17839] hover:text-white rounded-xl transition-all duration-300 flex items-center gap-1.5 justify-center min-h-[44px] px-3 active:scale-95"
-                >
-                  <User size={18} strokeWidth={2} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Account</span>
-                </Link>
-              ) : (
-                <Link
-                  href="/login"
-                  aria-label="Login"
-                  className="md:hidden relative px-4 py-2 bg-[#3B1F0A] text-white hover:bg-[#C17839] rounded-xl transition-all duration-300 flex items-center gap-1.5 justify-center min-h-[44px] font-black text-[10px] uppercase tracking-widest active:scale-95"
-                >
-                  <User size={16} strokeWidth={2.5} />
-                  <span>Login</span>
-                </Link>
-              )}
 
               {/* Cart Toggle */}
               <button
