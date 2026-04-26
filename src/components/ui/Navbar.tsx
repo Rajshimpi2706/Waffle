@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { ShoppingBag, Menu, X, User, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Menu, X, User, ArrowRight, Home, UtensilsCrossed, Receipt, Heart, Info, Share2, Mail } from 'lucide-react';
 import { useCartStore } from '@/lib/cart';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from './Button';
@@ -163,84 +163,88 @@ export function Navbar() {
         </div>
       </header>
 
-      {/* Mobile Menu Overlay Architecture */}
+      {/* Mobile Menu Side Drawer (Stitch Design) */}
       <div
-        className={`fixed inset-0 z-40 bg-white/98 backdrop-blur-2xl transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] md:hidden flex flex-col ${isMobileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-full pointer-events-none'
-          }`}
+        className={`fixed inset-0 z-50 md:hidden transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
+          isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
         aria-hidden={!isMobileMenuOpen}
       >
-        {/* Spacer for fixed header */}
-        <div className="h-16" />
+        {/* Dark Backdrop */}
+        <div 
+          className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-500 ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0'}`}
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
 
-        <div className="flex-1 flex flex-col overflow-y-auto px-6 sm:px-10 pt-8 pb-6">
-          {/* Nav Links */}
-          <div className="space-y-1 mb-8">
-            <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.4em] opacity-40 mb-6">Main Menu</p>
-            <nav className="flex flex-col gap-2">
-              {navLinks.map((link, idx) => (
+        {/* Drawer Panel */}
+        <div className={`absolute top-0 left-0 bottom-0 w-[85%] max-w-sm bg-[#FDF6EC] shadow-2xl flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          
+          {/* Profile Section */}
+          <div className="pt-14 pb-8 px-8 border-b border-[#EADDCE]">
+            <div className="w-16 h-16 rounded-full border-[1.5px] border-[#3B1F0A] overflow-hidden bg-white mb-4 flex items-center justify-center">
+               <User size={32} strokeWidth={1.5} className="text-[#3B1F0A]" />
+            </div>
+            {user ? (
+              <>
+                <h2 className="font-serif text-[22px] font-bold text-[#3B1F0A] tracking-tight leading-tight">Artisan Member</h2>
+                <p className="text-[13px] text-[#5C4033] mt-1">{user.email}</p>
+              </>
+            ) : (
+              <>
+                <h2 className="font-serif text-[22px] font-bold text-[#3B1F0A] tracking-tight leading-tight">Welcome, Guest</h2>
+                <p className="text-[13px] text-[#5C4033] mt-1 mb-2">Har Bite Mein Happiness</p>
+                <Link onClick={() => setIsMobileMenuOpen(false)} href="/login" className="inline-block text-[11px] font-bold text-white bg-[#3B1F0A] px-4 py-2 rounded-lg uppercase tracking-widest mt-1 hover:bg-[#C17839] transition-colors">Login / Sign Up</Link>
+              </>
+            )}
+          </div>
+
+          {/* Links Section */}
+          <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+            {[
+              { name: 'HOME', icon: Home, href: '/' },
+              { name: 'OUR MENU', icon: UtensilsCrossed, href: '/menu' },
+              { name: 'ORDERS', icon: Receipt, href: '/account/orders' },
+              { name: 'FAVORITES', icon: Heart, href: '/account/favorites' },
+              { name: 'ABOUT US', icon: Info, href: '/about' },
+            ].map((link) => {
+              const isActive = pathname === link.href;
+              const Icon = link.icon;
+              return (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`text-3xl sm:text-4xl font-serif font-black tracking-tighter transition-all duration-300 flex items-center justify-between group py-2 border-b border-[#F5E6CC]/60 ${pathname === link.href ? 'text-[#C17839]' : 'text-[#3B1F0A]'
-                    }`}
-                  style={{ transitionDelay: `${idx * 60}ms` }}
+                  className={`flex items-center gap-5 px-5 py-4 rounded-xl transition-colors ${
+                    isActive ? 'bg-[#EBE0D2] text-[#3B1F0A]' : 'text-[#3B1F0A] hover:bg-[#F5E6CC]'
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {link.name}
-                  <ArrowRight size={22} className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-[#C17839]" />
+                  <Icon size={22} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-[#3B1F0A]' : 'text-[#6D4C3A]'} />
+                  <span className="font-bold text-[13px] tracking-[0.15em]">{link.name}</span>
                 </Link>
-              ))}
-            </nav>
+              );
+            })}
           </div>
 
-          {/* Account Section in Mobile Menu — belt-and-suspenders login visibility */}
-          <div className="mt-auto space-y-4">
-            <p className="text-[10px] font-black text-[#A17C5F] uppercase tracking-[0.4em] opacity-40">Account</p>
-            {user ? (
-              <div className="flex flex-col gap-3">
-                <Link
-                  href="/account"
-                  className="flex items-center justify-between w-full px-6 py-4 bg-[#FDF6EC] rounded-2xl text-[#3B1F0A] font-bold text-sm uppercase tracking-widest border border-[#F5E6CC] active:scale-95 transition-all"
-                >
-                  <div className="flex items-center gap-3">
-                    <User size={18} />
-                    My Account
-                  </div>
-                  <ArrowRight size={16} className="text-[#C17839]" />
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  className="w-full px-6 py-4 rounded-2xl text-red-500 font-bold text-sm uppercase tracking-widest border border-red-100 bg-red-50 active:scale-95 transition-all min-h-[52px]"
-                >
-                  {isLoggingOut ? 'Signing out…' : 'Sign Out'}
-                </button>
-              </div>
-            ) : (
-              <Link
-                href="/login"
-                className="flex items-center justify-center gap-3 w-full px-6 py-4 bg-[#3B1F0A] rounded-2xl text-white font-bold text-sm uppercase tracking-widest active:scale-95 transition-all min-h-[52px]"
+          {/* Footer Section */}
+          <div className="p-8 border-t border-[#EADDCE] bg-[#FDF6EC] pb-safe">
+            {user && (
+              <button 
+                onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+                disabled={isLoggingOut}
+                className="w-full text-left mb-8 text-[11px] font-black text-red-700/70 hover:text-red-700 uppercase tracking-widest"
               >
-                <User size={18} />
-                Login / Sign Up
-              </Link>
+                {isLoggingOut ? 'Signing out...' : 'Sign Out'}
+              </button>
             )}
-
-            {/* Cart CTA */}
-            <button
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                document.dispatchEvent(new CustomEvent('open-cart'));
-              }}
-              className="flex items-center justify-between w-full px-6 py-4 bg-[#C17839] rounded-2xl text-white active:scale-95 transition-all min-h-[52px]"
-            >
-              <div className="flex items-center gap-3">
-                <ShoppingBag size={18} />
-                <span className="font-bold text-sm uppercase tracking-widest">View Cart</span>
-              </div>
-              {cartItemCount > 0 && (
-                <span className="bg-white/25 px-3 py-1 rounded-full text-xs font-black">{cartItemCount} ITEMS</span>
-              )}
-            </button>
+            <p className="text-[11px] font-black text-[#6D4C3A] uppercase tracking-[0.1em] mb-4">Follow our journey</p>
+            <div className="flex gap-5">
+              <button aria-label="Share" className="text-[#3B1F0A] hover:text-[#C17839] transition-colors">
+                <Share2 size={24} strokeWidth={2} />
+              </button>
+              <button aria-label="Email" className="text-[#3B1F0A] hover:text-[#C17839] transition-colors">
+                <Mail size={24} strokeWidth={2} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
